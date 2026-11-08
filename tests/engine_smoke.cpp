@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
     api->destroy(vel_full); api->destroy(vel_half);
     double velocity_ratio = full_energy ? (double)half_energy / full_energy : 0.0;
     if (velocity_ratio < 0.20 || velocity_ratio > 0.32) {
-        fprintf(stderr, "MIDI velocity scaling is incorrect: ratio %.3f\\n", velocity_ratio);
+        fprintf(stderr, "MIDI velocity scaling is incorrect: ratio %.3f\n", velocity_ratio);
         api->destroy(engine); return 1;
     }
 
