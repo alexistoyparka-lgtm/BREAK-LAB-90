@@ -4,7 +4,7 @@ A breakbeat sampler plugin project for OpenMPC, targeting first-generation MPC h
 
 ## Project status
 
-**Development version 0.1.4.** The earlier v0.1.1 baseline passed the ARMv7 build and OpenMPC host test suite with AddressSanitizer/UBSan. The current development branch adds bounded RIFF parsing, click-reducing slice fades, MIDI velocity handling, live pitch, round-robin voice stealing, selected-slice audition, reverse-boundary protection, factory presets and an on-screen sample status. The full ARMv7 build, OpenMPC wrapper suite and ASan/UBSan engine smoke tests passed in CI run #67. The generated ARM package and skin preview were inspected; a small label-fit adjustment is being rebuilt in run #68 before the device test.
+**Development version 0.1.5.** The earlier v0.1.1 baseline passed the ARMv7 build and OpenMPC host test suite with AddressSanitizer/UBSan. The current development branch adds bounded RIFF parsing, click-reducing slice fades, MIDI velocity handling, live pitch, round-robin voice stealing, selected-slice audition, reverse-boundary protection, factory presets and an on-screen sample status. The full ARMv7 build, OpenMPC wrapper suite and ASan/UBSan engine smoke tests passed in CI run #67 and #68. The generated ARM package and skin preview were inspected. The preview exposed a truncated control label; it has been shortened to “Slice” and is being rebuilt in run #72.
 
 This is not yet a finished or hardware-tested plugin. The CI checks validate the wrapper/API integration and produce the correct 32-bit ARM binary, but they do not prove that the plugin loads or performs correctly on an MPC Live 1 running OS 3.10. Do not install it on a production device yet.
 
@@ -34,7 +34,7 @@ This is not yet a finished or hardware-tested plugin. The CI checks validate the
 ## Target and validation
 
 - Target: first-generation MPC Live (32-bit ARM / armhf)
-- CI: v0.1.4 ARMv7 build, wrapper host suite and engine smoke tests passed in run #67; skin-only rebuild #68 pending
+- CI: v0.1.5 ARMv7 build, wrapper host suite and engine smoke tests passed in run #67; skin-only rebuild #68 pending
 - Hardware: not tested; MPC Live 1 / OS 3.10 validation remains outstanding
 
 ## Copyright
