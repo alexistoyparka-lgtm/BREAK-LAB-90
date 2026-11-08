@@ -165,6 +165,26 @@ int main(int argc, char **argv) {
     for (int i = 0; i < 256; ++i) reverse_energy += (long)reverse_out[i] * reverse_out[i];
     if (!reverse_energy) { fprintf(stderr, "reverse playback produced silence\n"); api->destroy(engine); return 1; }
 
+    // Reverse must change the actual sample order, not merely keep the voice audible.
+    void *forward_engine = api->create(dir);
+    void *backward_engine = api->create(dir);
+    if (!forward_engine || !backward_engine) return 1;
+    api->set_param(backward_engine, "reverse", "1");
+    uint8_t direction_note[3] = {0x90, 51, 100};
+    int16_t forward_out[32 * 2] = {}, backward_out[32 * 2] = {};
+    api->midi(forward_engine, direction_note, 3);
+    api->midi(backward_engine, direction_note, 3);
+    api->render(forward_engine, forward_out, 32);
+    api->render(backward_engine, backward_out, 32);
+    long direction_difference = 0;
+    for (int i = 0; i < 64; ++i) direction_difference += abs((int)forward_out[i] - (int)backward_out[i]);
+    api->destroy(forward_engine);
+    api->destroy(backward_engine);
+    if (direction_difference < 1000) {
+        fprintf(stderr, "reverse control did not change playback direction\n");
+        api->destroy(engine); return 1;
+    }
+
     api->destroy(engine);
 
     // C4 must audition the selected slice, not always slice 1.
@@ -232,6 +252,6 @@ int main(int argc, char **argv) {
     unlink((breaks + "/break01.wav").c_str());
     rmdir(breaks.c_str());
     rmdir(dir);
-    puts("PASS: bundled break loading, 48 kHz stereo and 44.1 kHz mono WAV loading, click-safe fade-in, all 16 MIDI slices, velocity scaling, pitch playback/clamping, selected-slice audition, reverse playback and malformed RIFF/PCM metadata rejection");
+    puts("PASS: bundled break loading, 48 kHz stereo and 44.1 kHz mono WAV loading, click-safe fade-in, all 16 MIDI slices, velocity scaling, pitch playback/clamping, selected-slice audition, reverse playback direction and malformed RIFF/PCM metadata rejection");
     return 0;
 }
