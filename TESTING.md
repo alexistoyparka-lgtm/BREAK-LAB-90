@@ -22,7 +22,7 @@ This file deliberately separates automated host/build validation from a real MPC
 | Pitch | Parameter round-trip, clamping and audible playback-rate change work | Test added |
 | Reverse | Reverse playback changes sample order and remains inside the selected slice | Direction comparison added; boundary guard included |
 | Slice edge fade | First output frame starts at silence; sample remains audible | Test added |
-| Factory presets | Four presets validate and appear in host preset list | Passed in wrapper host test #67 |
+| Factory presets | Four presets validate and appear in host preset list | Passed in wrapper host test #70 |
 
 ## Physical MPC Live 1 / OS 3.10
 
