@@ -40,19 +40,19 @@ static bool load_wav(const char* path, Sample& s) {
   long long riffEnd64=8LL+(long long)riffBytes;
   if(riffBytes<4||riffEnd64>fileSize||riffEnd64<12){std::fclose(f);return false;}
   long riffEnd=(long)riffEnd64;
-  int fmt=0,ch=0,bits=0,sampleRate=44100,blockAlign=0; uint32_t dataBytes=0; long dataAt=0; unsigned char c[8];
+  int fmt=0,ch=0,bits=0,sampleRate=44100,blockAlign=0,byteRate=0; uint32_t dataBytes=0; long dataAt=0; unsigned char c[8];
   while(std::ftell(f)>=0&&std::ftell(f)+8<=riffEnd&&std::fread(c,1,8,f)==8){
     uint32_t n=u32(c+4); long at=std::ftell(f);
     if(at<0||(long long)at+(long long)n+(n&1)>riffEnd)break;
     if(!std::memcmp(c,"fmt ",4)){
       if(n<16||n>4096)break;
       unsigned char b[16]; if(std::fread(b,1,16,f)!=16)break;
-      fmt=u16(b);ch=u16(b+2);sampleRate=(int)u32(b+4);blockAlign=u16(b+12);bits=u16(b+14);
+      fmt=u16(b);ch=u16(b+2);sampleRate=(int)u32(b+4);byteRate=(int)u32(b+8);blockAlign=u16(b+12);bits=u16(b+14);
     } else if(!std::memcmp(c,"data",4)){dataBytes=n;dataAt=at;break;}
     if(std::fseek(f,(long)((long long)at+(long long)n+(n&1)),SEEK_SET)!=0)break;
   }
   if(fmt!=1||(ch!=1&&ch!=2)||bits!=16||blockAlign!=ch*2||
-     sampleRate<8000||sampleRate>192000||!dataAt||dataBytes<4||
+     sampleRate<8000||sampleRate>192000||byteRate!=sampleRate*blockAlign||!dataAt||dataBytes<4||
      dataBytes%(2u*ch)!=0){std::fclose(f);return false;}
   const size_t frames=dataBytes/(2*ch);
   // Two decoded float channels: cap resident sample memory at 64 MiB on MPC Gen1.
