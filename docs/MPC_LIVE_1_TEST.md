@@ -13,7 +13,7 @@ The artifact is a CI run artifact, not a published release, and expires after 14
 
 ## 2. Back up before installation
 
-- Back up `/mnt/ MPC.settings` only if that is the actual path on the device; otherwise locate the device's real `MPC.settings` file first.
+- Locate the device's actual `MPC.settings` file and make a backup before running the installer.
 - Back up the existing BREAK LAB 90 plugin folder under `/sdcard/Synths`, if one exists.
 - Keep a copy of the downloaded ZIP on the computer.
 
