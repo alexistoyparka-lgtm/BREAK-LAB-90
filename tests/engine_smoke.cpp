@@ -35,6 +35,18 @@ static bool make_malformed_wav(const std::string &path) {
     return true;
 }
 
+static bool make_bad_byte_rate_wav(const std::string &path) {
+    FILE *f = fopen(path.c_str(), "wb");
+    if (!f) return false;
+    fwrite("RIFF", 1, 4, f); put32(f, 36 + 64); fwrite("WAVE", 1, 4, f);
+    fwrite("fmt ", 1, 4, f); put32(f, 16); put16(f, 1); put16(f, 2);
+    put32(f, 44100); put32(f, 123); put16(f, 4); put16(f, 16);
+    fwrite("data", 1, 4, f); put32(f, 64);
+    for (int i = 0; i < 16; ++i) { put16(f, 1000); put16(f, 1000); }
+    fclose(f);
+    return true;
+}
+
 int main(int argc, char **argv) {
     char root[] = "/tmp/break-lab-90-test-XXXXXX";
     char *dir = mkdtemp(root);
@@ -166,6 +178,18 @@ int main(int argc, char **argv) {
     api->destroy(engine);
     if (!mono_energy) { fprintf(stderr, "mono WAV playback produced silence\n"); return 1; }
 
+    // A PCM file with an inconsistent byte rate must be rejected.
+    if (!make_bad_byte_rate_wav(breaks + "/break01.wav")) return 1;
+    engine = api->create(dir);
+    if (!engine) return 1;
+    memset(status, 0, sizeof(status));
+    if (!api->get_param(engine, "status", status, sizeof(status)) ||
+        strcmp(status, "NO WAV: add breaks/break01.wav")) {
+        fprintf(stderr, "invalid byte-rate WAV was not rejected: %s\n", status);
+        api->destroy(engine); return 1;
+    }
+    api->destroy(engine);
+
     // Oversized/truncated chunk lengths must be rejected safely, not allocated.
     if (!make_malformed_wav(breaks + "/break01.wav")) return 1;
     engine = api->create(dir);
@@ -181,6 +205,6 @@ int main(int argc, char **argv) {
     unlink((breaks + "/break01.wav").c_str());
     rmdir(breaks.c_str());
     rmdir(dir);
-    puts("PASS: bundled break loading, 48 kHz stereo and 44.1 kHz mono WAV loading, click-safe fade-in, all 16 MIDI slices, velocity scaling, pitch clamping, selected-slice audition, reverse playback and malformed RIFF rejection");
+    puts("PASS: bundled break loading, 48 kHz stereo and 44.1 kHz mono WAV loading, click-safe fade-in, all 16 MIDI slices, velocity scaling, pitch clamping, selected-slice audition, reverse playback and malformed RIFF/PCM metadata rejection");
     return 0;
 }
