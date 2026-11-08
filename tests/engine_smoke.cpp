@@ -10,18 +10,27 @@
 static void put16(FILE *f, uint16_t v) { fputc(v & 255, f); fputc((v >> 8) & 255, f); }
 static void put32(FILE *f, uint32_t v) { put16(f, v & 65535); put16(f, v >> 16); }
 
-static bool make_wav(const std::string &path) {
+static bool make_wav(const std::string &path, uint32_t sample_rate = 48000) {
     FILE *f = fopen(path.c_str(), "wb");
     if (!f) return false;
     const uint32_t frames = 1600, data_size = frames * 4;
     fwrite("RIFF", 1, 4, f); put32(f, 36 + data_size); fwrite("WAVE", 1, 4, f);
     fwrite("fmt ", 1, 4, f); put32(f, 16); put16(f, 1); put16(f, 2);
-    put32(f, 44100); put32(f, 44100 * 4); put16(f, 4); put16(f, 16);
+    put32(f, sample_rate); put32(f, sample_rate * 4); put16(f, 4); put16(f, 16);
     fwrite("data", 1, 4, f); put32(f, data_size);
     for (uint32_t i = 0; i < frames; ++i) {
         int16_t v = (i & 1) ? 7000 : -7000;
         put16(f, (uint16_t)v); put16(f, (uint16_t)v);
     }
+    fclose(f);
+    return true;
+}
+
+static bool make_malformed_wav(const std::string &path) {
+    FILE *f = fopen(path.c_str(), "wb");
+    if (!f) return false;
+    fwrite("RIFF", 1, 4, f); put32(f, 40); fwrite("WAVE", 1, 4, f);
+    fwrite("fmt ", 1, 4, f); put32(f, 0xffffffffu);
     fclose(f);
     return true;
 }
@@ -65,9 +74,22 @@ int main() {
     if (!reverse_energy) { fprintf(stderr, "reverse playback produced silence\n"); api->destroy(engine); return 1; }
 
     api->destroy(engine);
+
+    // Oversized/truncated chunk lengths must be rejected safely, not allocated.
+    if (!make_malformed_wav(breaks + "/break01.wav")) return 1;
+    engine = api->create(dir);
+    if (!engine) return 1;
+    memset(status, 0, sizeof(status));
+    if (!api->get_param(engine, "status", status, sizeof(status)) ||
+        strcmp(status, "NO WAV: add breaks/break01.wav")) {
+        fprintf(stderr, "malformed WAV was not rejected: %s\\n", status);
+        api->destroy(engine); return 1;
+    }
+    api->destroy(engine);
+
     unlink((breaks + "/break01.wav").c_str());
     rmdir(breaks.c_str());
     rmdir(dir);
-    puts("PASS: WAV loading, all 16 MIDI slices and reverse playback");
+    puts("PASS: 48 kHz WAV loading, all 16 MIDI slices, reverse playback and malformed WAV rejection");
     return 0;
 }
