@@ -6,9 +6,9 @@ This file deliberately separates automated host/build validation from a real MPC
 
 | Check | Expected result | Current status |
 |---|---|---|
-| ARMv7 / armhf build | 32-bit ARM VST binary is produced | Passed in run #65; latest rebuild pending in #67 |
-| OpenMPC wrapper host test | Parameter, preset and wrapper checks pass | Passed in run #65 |
-| Engine smoke test under ASan/UBSan | No sanitizer errors; bundled WAV loads | Linkage issue found in #65/#66; fixed in commit `6b33f1b`; run #67 pending |
+| ARMv7 / armhf build | 32-bit ARM VST binary is produced | Passed in run #67 (GLIBC_2.29) |
+| OpenMPC wrapper host test | Parameter, preset and wrapper checks pass | Passed in run #67 |
+| Engine smoke test under ASan/UBSan | No sanitizer errors; bundled WAV loads | Passed in run #67, including all listed audio checks |
 | 48 kHz stereo WAV | Loads, preserves independent left/right channels and uses the source-rate playback step | Tests added |
 | 44.1 kHz mono WAV | Loads and plays at the correct host-rate step | Test added |
 | Invalid RIFF size / PCM byte rate | File is rejected | Test added |
@@ -22,11 +22,11 @@ This file deliberately separates automated host/build validation from a real MPC
 | Pitch | Parameter round-trip, clamping and audible playback-rate change work | Test added |
 | Reverse | Reverse playback changes sample order and remains inside the selected slice | Direction comparison added; boundary guard included |
 | Slice edge fade | First output frame starts at silence; sample remains audible | Test added |
-| Factory presets | Four presets validate and appear in host preset list | Passed in wrapper host test #65 |
+| Factory presets | Four presets validate and appear in host preset list | Passed in wrapper host test #67 |
 
 ## Physical MPC Live 1 / OS 3.10
 
-**NOT TESTED**
+**NOT TESTED — waiting for the final skin-only rebuild #68 and then the physical MPC test**
 
 Only test after a fresh CI run has produced the ARMv7 package. Back up the MPC's plugin list and any existing plugin folder before installing. Keep the first test non-destructive.
 
