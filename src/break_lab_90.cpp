@@ -15,7 +15,7 @@ extern "C" {
 
 namespace {
 constexpr double PI = 3.14159265358979323846;
-struct Sample { std::vector<float> l, r; int channels=0; };
+struct Sample { std::vector<float> l, r; int channels=0; int sampleRate=44100; };
 struct Voice { bool on=false; double pos=0, step=1; int end=0; float gain=1; int slice=0; };
 struct Engine {
   Sample sample;
@@ -32,16 +32,16 @@ static uint32_t u32(const unsigned char*p){return (uint32_t)p[0]|((uint32_t)p[1]
 static bool load_wav(const char* path, Sample& s) {
   FILE*f=std::fopen(path,"rb"); if(!f)return false;
   unsigned char h[12]; if(std::fread(h,1,12,f)!=12||std::memcmp(h,"RIFF",4)||std::memcmp(h+8,"WAVE",4)){std::fclose(f);return false;}
-  int fmt=0,ch=0,bits=0; uint32_t dataBytes=0; long dataAt=0; unsigned char c[8];
+  int fmt=0,ch=0,bits=0,sampleRate=44100; uint32_t dataBytes=0; long dataAt=0; unsigned char c[8];
   while(std::fread(c,1,8,f)==8){uint32_t n=u32(c+4); long at=std::ftell(f);
-    if(!std::memcmp(c,"fmt ",4)){std::vector<unsigned char>b(n);if(n<16||std::fread(b.data(),1,n,f)!=n)break;fmt=u16(b.data());ch=u16(b.data()+2);bits=u16(b.data()+14);}
+    if(!std::memcmp(c,"fmt ",4)){std::vector<unsigned char>b(n);if(n<16||std::fread(b.data(),1,n,f)!=n)break;fmt=u16(b.data());ch=u16(b.data()+2);sampleRate=(int)u32(b.data()+4);bits=u16(b.data()+14);}
     else if(!std::memcmp(c,"data",4)){dataBytes=n;dataAt=at;break;}
     if(std::fseek(f,at+n+(n&1),SEEK_SET)!=0)break;
   }
-  if(fmt!=1||(ch!=1&&ch!=2)||bits!=16||!dataAt||dataBytes<4){std::fclose(f);return false;}
+  if(fmt!=1||(ch!=1&&ch!=2)||bits!=16||sampleRate<8000||sampleRate>192000||!dataAt||dataBytes<4){std::fclose(f);return false;}
   const size_t frames=dataBytes/(2*ch); if(frames<16||frames>44100u*60u*5u){std::fclose(f);return false;}
   std::fseek(f,dataAt,SEEK_SET); std::vector<unsigned char>b(dataBytes); size_t got=std::fread(b.data(),1,dataBytes,f);std::fclose(f);if(got<dataBytes)return false;
-  s.l.resize(frames);s.r.resize(frames);s.channels=ch;
+  s.l.resize(frames);s.r.resize(frames);s.channels=ch;s.sampleRate=sampleRate;
   for(size_t i=0;i<frames;i++){float a=(int16_t)u16(&b[i*ch*2])/32768.0f;float d=ch==2?(int16_t)u16(&b[i*4+2])/32768.0f:a;s.l[i]=a;s.r[i]=d;}
   return true;
 }
@@ -51,7 +51,7 @@ static void start_voice(Engine*e,int sl,float vel){
   int total=(int)e->sample.l.size(), a=(int)((long long)total*sl/16), b=(int)((long long)total*(sl+1)/16);
   if(b-a<2)return;
   Voice*v=nullptr;for(auto&x:e->voices)if(!x.on){v=&x;break;}if(!v)v=&e->voices[0];
-  double rate=std::pow(2.0,(e->pitch/12.0));
+  double rate=std::pow(2.0,(e->pitch/12.0))*(e->sample.sampleRate/44100.0);
   v->on=true;v->slice=sl;v->gain=std::max(0.f,std::min(1.f,vel));v->end=b;
   v->step=rate*(e->reverse>.5f?-1.0:1.0);v->pos=e->reverse>.5f?(b-1):a;
 }
