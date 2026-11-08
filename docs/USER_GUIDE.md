@@ -38,7 +38,7 @@ Supported audio:
 
 ## Sound controls
 
-- **Selected Slice:** 1–16 (internally 0–15).
+- **Slice:** 1–16 (internally 0–15); this is the selected slice for C4 audition.
 - **Pitch:** -24 to +24 semitones. Pitch changes affect voices already playing.
 - **Direction:** Forward or Reverse; direction is captured when a voice starts.
 - **Mode:** Clean or Vintage.
