@@ -13,6 +13,7 @@ This file deliberately separates automated host/build validation from a real MPC
 | 44.1 kHz mono WAV | Loads and plays at the correct host-rate step | Test added |
 | Invalid RIFF size / PCM byte rate | File is rejected | Test added |
 | 16 MIDI slices | Notes 36–51 each produce audio | Test added |
+| Polyphony | Eight voices overlap; a ninth trigger steals a voice safely | Test added |
 | Selected slice audition | MIDI note 60 plays selected slice | Test added |
 | MIDI velocity | Velocity scales output level | Test added |
 | Vintage processing | Bit-depth reduction and sample-hold rate crush change the rendered signal | Tests added |
