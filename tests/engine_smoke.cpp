@@ -75,6 +75,12 @@ int main(int argc, char **argv) {
         fprintf(stderr, "WAV load failed: %s\n", status); return 1;
     }
 
+    // Capture the same source material at 48 kHz for a later 44.1 kHz comparison.
+    uint8_t sample_rate_note[3] = {0x90, 36, 100};
+    int16_t sample_rate_48k_out[128 * 2] = {};
+    api->midi(engine, sample_rate_note, 3);
+    api->render(engine, sample_rate_48k_out, 128);
+
     // A fresh voice must fade in from silence to avoid a hard slice-edge click.
     void *fade_engine = api->create(dir);
     if (!fade_engine) return 1;
@@ -268,6 +274,15 @@ int main(int argc, char **argv) {
     api->destroy(engine);
     if (!mono_energy) { fprintf(stderr, "mono WAV playback produced silence\n"); return 1; }
 
+    // The loader must honor the source sample rate, not play every WAV at 44.1 kHz.
+    long sample_rate_difference = 0;
+    for (int i = 0; i < 128; ++i)
+        sample_rate_difference += abs((int)sample_rate_48k_out[i * 2] - (int)mono_out[i * 2]);
+    if (sample_rate_difference < 5000) {
+        fprintf(stderr, "48 kHz source rate was not reflected in playback step: %ld\n", sample_rate_difference);
+        return 1;
+    }
+
     // A PCM file with an inconsistent byte rate must be rejected.
     if (!make_bad_byte_rate_wav(breaks + "/break01.wav")) return 1;
     engine = api->create(dir);
@@ -295,6 +310,6 @@ int main(int argc, char **argv) {
     unlink((breaks + "/break01.wav").c_str());
     rmdir(breaks.c_str());
     rmdir(dir);
-    puts("PASS: bundled break loading, 48 kHz stereo and 44.1 kHz mono WAV loading, click-safe fade-in, all 16 MIDI slices, velocity scaling, Vintage bit-depth/rate crushing, pitch playback/clamping, selected-slice audition, reverse playback direction and malformed RIFF/PCM metadata rejection");
+    puts("PASS: bundled break loading, 48 kHz stereo and 44.1 kHz mono WAV loading and sample-rate conversion, click-safe fade-in, all 16 MIDI slices, velocity scaling, Vintage bit-depth/rate crushing, pitch playback/clamping, selected-slice audition, reverse playback direction and malformed RIFF/PCM metadata rejection");
     return 0;
 }
