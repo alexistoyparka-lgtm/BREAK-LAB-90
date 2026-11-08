@@ -16,7 +16,7 @@ extern "C" {
 namespace {
 constexpr double PI = 3.14159265358979323846;
 struct Sample { std::vector<float> l, r; int channels=0; int sampleRate=44100; };
-struct Voice { bool on=false; double pos=0; int end=0; int direction=1; float gain=1; int slice=0; };
+struct Voice { bool on=false; double pos=0; int begin=0, end=0; int direction=1; int fadeFrames=88; float gain=1; int slice=0; };
 struct Engine {
   Sample sample;
   Voice voices[8];
@@ -75,7 +75,7 @@ static void start_voice(Engine*e,int sl,float vel){
   int total=(int)e->sample.l.size(), a=(int)((long long)total*sl/16), b=(int)((long long)total*(sl+1)/16);
   if(b-a<2)return;
   int slot=-1;for(int i=0;i<8;i++)if(!e->voices[i].on){slot=i;break;}if(slot<0)slot=e->voiceCursor;e->voiceCursor=(slot+1)%8;Voice*v=&e->voices[slot];
-  v->on=true;v->slice=sl;v->gain=std::max(0.f,std::min(1.f,vel));v->end=b;v->direction=e->reverse>.5f?-1:1;
+  v->on=true;v->slice=sl;v->gain=std::max(0.f,std::min(1.f,vel));v->begin=a;v->end=b;v->direction=e->reverse>.5f?-1:1;v->fadeFrames=std::max(8,e->sample.sampleRate/500);v->fadeFrames=std::min(v->fadeFrames,(b-a)/2);
   v->pos=v->direction<0?(b-1):a;
 }
 static float quantize(float x,int bits){bits=std::max(4,std::min(16,bits));float levels=(float)((1u<<(bits-1))-1u);return std::round(x*levels)/levels;}
@@ -99,7 +99,7 @@ static int get_param_engine(void*p,const char*k,char*b,int n){if(!p||!k||!b||n<2
 #undef GET
  if(!std::strcmp(k,"status")){std::snprintf(b,n,"%s",e->status.c_str());return 1;}return 0;}
 static void render_engine(void*p,int16_t*out,int frames){Engine*e=(Engine*)p;if(!e||!out)return;float cutoffHz=150.0f+e->cutoff*18000.0f;float alpha=1.0f-std::exp(-2.0f*(float)PI*cutoffHz/44100.0f);int bits=(int)std::round(e->bits);int hold=e->mode>.5f?1+(int)(e->rate*23.0f):1;double pitchStep=std::pow(2.0,(e->pitch/12.0))*(e->sample.sampleRate/44100.0);
- for(int i=0;i<frames;i++){float l=0,r=0;for(auto&v:e->voices){if(!v.on)continue;int ix=(int)v.pos;if(ix<0||ix>=v.end||ix>=(int)e->sample.l.size()){v.on=false;continue;}int lo=(int)((long long)e->sample.l.size()*v.slice/16),hi=v.end;double step=pitchStep*v.direction;int ix1=std::min(ix+1,hi-1);float frac=(float)std::fabs(v.pos-ix);float sl=e->sample.l[ix]+(e->sample.l[ix1]-e->sample.l[ix])*frac;float sr=e->sample.r[ix]+(e->sample.r[ix1]-e->sample.r[ix])*frac;l+=sl*v.gain;r+=sr*v.gain;v.pos+=step;if((step>0&&v.pos>=v.end)||(step<0&&v.pos<lo))v.on=false;}
+ for(int i=0;i<frames;i++){float l=0,r=0;for(auto&v:e->voices){if(!v.on)continue;int ix=(int)v.pos;if(ix<0||ix>=v.end||ix>=(int)e->sample.l.size()){v.on=false;continue;}int lo=(int)((long long)e->sample.l.size()*v.slice/16),hi=v.end;double step=pitchStep*v.direction;int ix1=std::min(ix+1,hi-1);float frac=(float)std::fabs(v.pos-ix);float sl=e->sample.l[ix]+(e->sample.l[ix1]-e->sample.l[ix])*frac;float sr=e->sample.r[ix]+(e->sample.r[ix1]-e->sample.r[ix])*frac;double fromStart=v.direction>0?(v.pos-v.begin):((v.end-1)-v.pos);double toEnd=v.direction>0?((v.end-1)-v.pos):(v.pos-v.begin);float env=1.0f;if(v.fadeFrames>0){env=(float)std::min(1.0,std::max(0.0,std::min(fromStart,toEnd)/v.fadeFrames));}l+=sl*v.gain*env;r+=sr*v.gain*env;v.pos+=step;if((step>0&&v.pos>=v.end)||(step<0&&v.pos<lo))v.on=false;}
  if(e->rateCounter==0){e->heldL=l;e->heldR=r;}if(++e->rateCounter>=hold)e->rateCounter=0;if(e->mode>.5f){l=quantize(e->heldL,bits);r=quantize(e->heldR,bits);}else{l=e->heldL;r=e->heldR;}
  e->lpL+=alpha*(l-e->lpL);e->lpR+=alpha*(r-e->lpR);l=e->lpL*e->volume;r=e->lpR*e->volume;
  l=std::max(-1.f,std::min(1.f,l));r=std::max(-1.f,std::min(1.f,r));out[i*2]=(int16_t)(l*32767.f);out[i*2+1]=(int16_t)(r*32767.f);
