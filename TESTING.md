@@ -14,7 +14,8 @@ This file deliberately separates automated host/build validation from a real MPC
 | Invalid RIFF size / PCM byte rate | File is rejected | Test added |
 | 16 MIDI slices | Notes 36–51 each produce audio | Test added |
 | Selected slice audition | MIDI note 60 plays selected slice | Test added |
-| MIDI velocity | Velocity scales output level | Test added |\n| Vintage processing | Bit-depth reduction and sample-hold rate crush change the rendered signal | Tests added |
+| MIDI velocity | Velocity scales output level | Test added |
+| Vintage processing | Bit-depth reduction and sample-hold rate crush change the rendered signal | Tests added |
 | Pitch | Parameter round-trip, clamping and audible playback-rate change work | Test added |
 | Reverse | Reverse playback changes sample order and remains inside the selected slice | Direction comparison added; boundary guard included |
 | Slice edge fade | First output frame starts at silence; sample remains audible | Test added |
