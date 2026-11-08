@@ -16,8 +16,8 @@ jobs:
   build-armv7:
     uses: open-mpc/mpc-vst-plugins/.github/workflows/vst-release.yml@11d340572dcc93778f341a9484c5ae6c51126abe
     with:
-      tag: break-lab-90-v0.1.1
-      version: "0.1.1"
+      tag: break-lab-90-v0.1.2
+      version: "0.1.2"
       tools_ref: 11d340572dcc93778f341a9484c5ae6c51126abe
       vst_dir: .
       build: '"$MPC_VST/tools/build_port.sh" vst.json armv7'
