@@ -6,9 +6,9 @@ This file deliberately separates automated host/build validation from a real MPC
 
 | Check | Expected result | Current status |
 |---|---|---|
-| ARMv7 / armhf build | 32-bit ARM VST binary is produced | Awaiting a fresh 0.1.4 CI result |
-| OpenMPC wrapper host test | Parameter, preset and wrapper checks pass | Awaiting a fresh 0.1.4 CI result |
-| Engine smoke test under ASan/UBSan | No sanitizer errors; bundled WAV loads | Awaiting a fresh 0.1.4 CI result |
+| ARMv7 / armhf build | 32-bit ARM VST binary is produced | Passed in run #65; latest rebuild pending in #67 |
+| OpenMPC wrapper host test | Parameter, preset and wrapper checks pass | Passed in run #65 |
+| Engine smoke test under ASan/UBSan | No sanitizer errors; bundled WAV loads | Linkage issue found in #65/#66; fixed in commit `6b33f1b`; run #67 pending |
 | 48 kHz stereo WAV | Loads, preserves independent left/right channels and uses the source-rate playback step | Tests added |
 | 44.1 kHz mono WAV | Loads and plays at the correct host-rate step | Test added |
 | Invalid RIFF size / PCM byte rate | File is rejected | Test added |
@@ -22,7 +22,7 @@ This file deliberately separates automated host/build validation from a real MPC
 | Pitch | Parameter round-trip, clamping and audible playback-rate change work | Test added |
 | Reverse | Reverse playback changes sample order and remains inside the selected slice | Direction comparison added; boundary guard included |
 | Slice edge fade | First output frame starts at silence; sample remains audible | Test added |
-| Factory presets | Four presets validate and appear in host preset list | Preset data added; CI check pending |
+| Factory presets | Four presets validate and appear in host preset list | Passed in wrapper host test #65 |
 
 ## Physical MPC Live 1 / OS 3.10
 
