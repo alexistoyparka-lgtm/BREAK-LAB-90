@@ -164,6 +164,6 @@ int main(int argc, char **argv) {
     unlink((breaks + "/break01.wav").c_str());
     rmdir(breaks.c_str());
     rmdir(dir);
-    puts("PASS: bundled break loading, 48 kHz WAV loading, click-safe fade-in, all 16 MIDI slices, selected-slice audition, reverse playback and malformed WAV rejection");
+    puts("PASS: bundled break loading, 48 kHz WAV loading, click-safe fade-in, all 16 MIDI slices, velocity scaling, pitch clamping, selected-slice audition, reverse playback and malformed RIFF rejection");
     return 0;
 }
