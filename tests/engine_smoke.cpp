@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
     api->midi(fade_engine, fade_note, 3);
     api->render(fade_engine, fade_first, 1);
     if (fade_first[0] != 0 || fade_first[1] != 0) {
-        fprintf(stderr, "slice fade-in did not start at silence\\n");
+        fprintf(stderr, "slice fade-in did not start at silence\n");
         api->destroy(fade_engine); return 1;
     }
     int16_t fade_tail[128 * 2] = {};
@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
     long fade_energy = 0;
     for (int i = 0; i < 256; ++i) fade_energy += (long)fade_tail[i] * fade_tail[i];
     api->destroy(fade_engine);
-    if (!fade_energy) { fprintf(stderr, "slice fade-in muted the sample\\n"); return 1; }
+    if (!fade_energy) { fprintf(stderr, "slice fade-in muted the sample\n"); return 1; }
 
     for (int note = 36; note <= 51; ++note) {
         uint8_t midi[3] = {0x90, (uint8_t)note, 100};
