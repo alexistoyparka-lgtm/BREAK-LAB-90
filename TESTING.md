@@ -6,9 +6,9 @@ This file deliberately separates automated host/build validation from a real MPC
 
 | Check | Expected result | Current status |
 |---|---|---|
-| ARMv7 / armhf build | 32-bit ARM VST binary is produced | Passed in runs #67 and #68 (GLIBC_2.29); 0.1.5 rebuild #72 pending |
-| OpenMPC wrapper host test | Parameter, preset and wrapper checks pass | Passed in runs #67 and #68; 0.1.5 rebuild #72 pending |
-| Engine smoke test under ASan/UBSan | No sanitizer errors; bundled WAV loads | Passed in runs #67 and #68, including all listed audio checks; 0.1.5 rebuild #72 pending |
+| ARMv7 / armhf build | 32-bit ARM VST binary is produced | Passed in run #72 (GLIBC_2.29) |
+| OpenMPC wrapper host test | Parameter, preset and wrapper checks pass | Passed in run #72 |
+| Engine smoke test under ASan/UBSan | No sanitizer errors; bundled WAV loads | Passed in run #72, including all listed audio checks |
 | 48 kHz stereo WAV | Loads, preserves independent left/right channels and uses the source-rate playback step | Tests added |
 | 44.1 kHz mono WAV | Loads and plays at the correct host-rate step | Test added |
 | Invalid RIFF size / PCM byte rate | File is rejected | Test added |
@@ -26,7 +26,7 @@ This file deliberately separates automated host/build validation from a real MPC
 
 ## Physical MPC Live 1 / OS 3.10
 
-**NOT TESTED — 0.1.5 package rebuild #72 is pending; hardware test follows its success**
+**NOT TESTED — CI package 0.1.5 is ready; awaiting physical MPC Live 1 test**
 
 Only test after a fresh CI run has produced the ARMv7 package. Back up the MPC's plugin list and any existing plugin folder before installing. Keep the first test non-destructive.
 
