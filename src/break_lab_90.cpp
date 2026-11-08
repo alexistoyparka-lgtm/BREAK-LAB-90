@@ -39,7 +39,8 @@ static bool load_wav(const char* path, Sample& s) {
     if(std::fseek(f,at+n+(n&1),SEEK_SET)!=0)break;
   }
   if(fmt!=1||(ch!=1&&ch!=2)||bits!=16||sampleRate<8000||sampleRate>192000||!dataAt||dataBytes<4){std::fclose(f);return false;}
-  const size_t frames=dataBytes/(2*ch); if(frames<16||frames>44100u*60u*5u){std::fclose(f);return false;}
+  if(dataBytes%(2u*ch)!=0)return std::fclose(f),false;
+  const size_t frames=dataBytes/(2*ch); if(frames<16||frames>(size_t)sampleRate*300u){std::fclose(f);return false;}
   std::fseek(f,dataAt,SEEK_SET); std::vector<unsigned char>b(dataBytes); size_t got=std::fread(b.data(),1,dataBytes,f);std::fclose(f);if(got<dataBytes)return false;
   s.l.resize(frames);s.r.resize(frames);s.channels=ch;s.sampleRate=sampleRate;
   for(size_t i=0;i<frames;i++){float a=(int16_t)u16(&b[i*ch*2])/32768.0f;float d=ch==2?(int16_t)u16(&b[i*4+2])/32768.0f:a;s.l[i]=a;s.r[i]=d;}
@@ -76,7 +77,7 @@ static int get_param_engine(void*p,const char*k,char*b,int n){if(!p||!k||!b||n<2
 #undef GET
  if(!std::strcmp(k,"status")){std::snprintf(b,n,"%s",e->status.c_str());return 1;}return 0;}
 static void render_engine(void*p,int16_t*out,int frames){Engine*e=(Engine*)p;if(!e||!out)return;float cutoffHz=150.0f+e->cutoff*18000.0f;float alpha=1.0f-std::exp(-2.0f*(float)PI*cutoffHz/44100.0f);int bits=(int)std::round(e->bits);int hold=e->mode>.5f?1+(int)(e->rate*23.0f):1;
- for(int i=0;i<frames;i++){float l=0,r=0;for(auto&v:e->voices){if(!v.on)continue;int ix=(int)v.pos;if(ix<0||ix>=v.end||ix>=(int)e->sample.l.size()){v.on=false;continue;}l+=e->sample.l[ix]*v.gain;r+=e->sample.r[ix]*v.gain;v.pos+=v.step;if((v.step>0&&v.pos>=v.end)||(v.step<0&&v.pos<((long long)e->sample.l.size()*v.slice/16)))v.on=false;}
+ for(int i=0;i<frames;i++){float l=0,r=0;for(auto&v:e->voices){if(!v.on)continue;int ix=(int)v.pos;if(ix<0||ix>=v.end||ix>=(int)e->sample.l.size()){v.on=false;continue;}int lo=(int)((long long)e->sample.l.size()*v.slice/16),hi=v.end;int ix1=v.step>0?std::min(ix+1,hi-1):std::max(ix-1,lo);float frac=(float)std::fabs(v.pos-ix);float sl=e->sample.l[ix]+(e->sample.l[ix1]-e->sample.l[ix])*frac;float sr=e->sample.r[ix]+(e->sample.r[ix1]-e->sample.r[ix])*frac;l+=sl*v.gain;r+=sr*v.gain;v.pos+=v.step;if((v.step>0&&v.pos>=v.end)||(v.step<0&&v.pos<((long long)e->sample.l.size()*v.slice/16)))v.on=false;}
  if(e->rateCounter++%hold==0){e->heldL=l;e->heldR=r;}if(e->mode>.5f){l=quantize(e->heldL,bits);r=quantize(e->heldR,bits);}else{l=e->heldL;r=e->heldR;}
  e->lpL+=alpha*(l-e->lpL);e->lpR+=alpha*(r-e->lpR);l=e->lpL*e->volume;r=e->lpR*e->volume;
  l=std::max(-1.f,std::min(1.f,l));r=std::max(-1.f,std::min(1.f,r));out[i*2]=(int16_t)(l*32767.f);out[i*2+1]=(int16_t)(r*32767.f);
