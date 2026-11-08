@@ -1,8 +1,8 @@
 [
   {"key":"slice","name":"Selected Slice","type":"float","display":"int","min":0,"max":15,"default":0},
   {"key":"pitch","name":"Pitch","type":"float","min":-24,"max":24,"default":0},
-  {"key":"reverse","name":"Reverse","type":"float","min":0,"max":1,"default":0},
-  {"key":"mode","name":"Mode","type":"float","min":0,"max":1,"default":0},
+  {"key":"reverse","name":"Direction","options":["Forward","Reverse"],"default":0},
+  {"key":"mode","name":"Mode","options":["Clean","Vintage"],"default":0},
   {"key":"bits","name":"Bits","type":"float","min":4,"max":16,"default":12},
   {"key":"rate","name":"Rate Crush","type":"float","min":0,"max":1,"default":0},
   {"key":"cutoff","name":"Filter","type":"float","min":0,"max":1,"default":1},
