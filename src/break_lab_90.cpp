@@ -20,6 +20,7 @@ struct Voice { bool on=false; double pos=0; int end=0; int direction=1; float ga
 struct Engine {
   Sample sample;
   Voice voices[8];
+  int voiceCursor=0;
   float slice=0, pitch=0, reverse=0, mode=0, bits=16, rate=0, cutoff=1, volume=.85f;
   float lpL=0, lpR=0;
   int heldSlice=0;
@@ -73,7 +74,7 @@ static void start_voice(Engine*e,int sl,float vel){
   sl=std::max(0,std::min(15,sl));
   int total=(int)e->sample.l.size(), a=(int)((long long)total*sl/16), b=(int)((long long)total*(sl+1)/16);
   if(b-a<2)return;
-  Voice*v=nullptr;for(auto&x:e->voices)if(!x.on){v=&x;break;}if(!v)v=&e->voices[0];
+  int slot=-1;for(int i=0;i<8;i++)if(!e->voices[i].on){slot=i;break;}if(slot<0)slot=e->voiceCursor;e->voiceCursor=(slot+1)%8;Voice*v=&e->voices[slot];
   v->on=true;v->slice=sl;v->gain=std::max(0.f,std::min(1.f,vel));v->end=b;v->direction=e->reverse>.5f?-1:1;
   v->pos=v->direction<0?(b-1):a;
 }
