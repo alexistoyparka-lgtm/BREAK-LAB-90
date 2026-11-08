@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
         char bundled_status[128] = {};
         if (!bundled || !api->get_param(bundled, "status", bundled_status, sizeof(bundled_status)) ||
             strcmp(bundled_status, "break01.wav READY")) {
-            fprintf(stderr, "bundled break failed to load: %s\\n", bundled_status);
+            fprintf(stderr, "bundled break failed to load: %s\n", bundled_status);
             if (bundled) api->destroy(bundled);
             return 1;
         }
@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
     api->render(engine, selected_out, 128);
     long selected_energy = 0;
     for (int i = 0; i < 256; ++i) selected_energy += (long)selected_out[i] * selected_out[i];
-    if (!selected_energy) { fprintf(stderr, "selected-slice audition produced silence\\n"); api->destroy(engine); return 1; }
+    if (!selected_energy) { fprintf(stderr, "selected-slice audition produced silence\n"); api->destroy(engine); return 1; }
 
     api->destroy(engine);
 
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
     memset(status, 0, sizeof(status));
     if (!api->get_param(engine, "status", status, sizeof(status)) ||
         strcmp(status, "NO WAV: add breaks/break01.wav")) {
-        fprintf(stderr, "malformed WAV was not rejected: %s\\n", status);
+        fprintf(stderr, "malformed WAV was not rejected: %s\n", status);
         api->destroy(engine); return 1;
     }
     api->destroy(engine);
