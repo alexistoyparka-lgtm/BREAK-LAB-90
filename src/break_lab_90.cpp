@@ -16,7 +16,7 @@ extern "C" {
 namespace {
 constexpr double PI = 3.14159265358979323846;
 struct Sample { std::vector<float> l, r; int channels=0; int sampleRate=44100; };
-struct Voice { bool on=false; double pos=0, step=1; int end=0; float gain=1; int slice=0; };
+struct Voice { bool on=false; double pos=0; int end=0; float gain=1; int slice=0; };
 struct Engine {
   Sample sample;
   Voice voices[8];
@@ -74,9 +74,8 @@ static void start_voice(Engine*e,int sl,float vel){
   int total=(int)e->sample.l.size(), a=(int)((long long)total*sl/16), b=(int)((long long)total*(sl+1)/16);
   if(b-a<2)return;
   Voice*v=nullptr;for(auto&x:e->voices)if(!x.on){v=&x;break;}if(!v)v=&e->voices[0];
-  double rate=std::pow(2.0,(e->pitch/12.0))*(e->sample.sampleRate/44100.0);
   v->on=true;v->slice=sl;v->gain=std::max(0.f,std::min(1.f,vel));v->end=b;
-  v->step=rate*(e->reverse>.5f?-1.0:1.0);v->pos=e->reverse>.5f?(b-1):a;
+  v->pos=e->reverse>.5f?(b-1):a;
 }
 static float quantize(float x,int bits){bits=std::max(4,std::min(16,bits));float levels=(float)((1u<<(bits-1))-1u);return std::round(x*levels)/levels;}
 }
@@ -98,8 +97,8 @@ static int get_param_engine(void*p,const char*k,char*b,int n){if(!p||!k||!b||n<2
  GET("slice",slice) GET("pitch",pitch) GET("reverse",reverse) GET("mode",mode) GET("bits",bits) GET("rate",rate) GET("cutoff",cutoff) GET("volume",volume)
 #undef GET
  if(!std::strcmp(k,"status")){std::snprintf(b,n,"%s",e->status.c_str());return 1;}return 0;}
-static void render_engine(void*p,int16_t*out,int frames){Engine*e=(Engine*)p;if(!e||!out)return;float cutoffHz=150.0f+e->cutoff*18000.0f;float alpha=1.0f-std::exp(-2.0f*(float)PI*cutoffHz/44100.0f);int bits=(int)std::round(e->bits);int hold=e->mode>.5f?1+(int)(e->rate*23.0f):1;
- for(int i=0;i<frames;i++){float l=0,r=0;for(auto&v:e->voices){if(!v.on)continue;int ix=(int)v.pos;if(ix<0||ix>=v.end||ix>=(int)e->sample.l.size()){v.on=false;continue;}int lo=(int)((long long)e->sample.l.size()*v.slice/16),hi=v.end;int ix1=v.step>0?std::min(ix+1,hi-1):std::max(ix-1,lo);float frac=(float)std::fabs(v.pos-ix);float sl=e->sample.l[ix]+(e->sample.l[ix1]-e->sample.l[ix])*frac;float sr=e->sample.r[ix]+(e->sample.r[ix1]-e->sample.r[ix])*frac;l+=sl*v.gain;r+=sr*v.gain;v.pos+=v.step;if((v.step>0&&v.pos>=v.end)||(v.step<0&&v.pos<((long long)e->sample.l.size()*v.slice/16)))v.on=false;}
+static void render_engine(void*p,int16_t*out,int frames){Engine*e=(Engine*)p;if(!e||!out)return;float cutoffHz=150.0f+e->cutoff*18000.0f;float alpha=1.0f-std::exp(-2.0f*(float)PI*cutoffHz/44100.0f);int bits=(int)std::round(e->bits);int hold=e->mode>.5f?1+(int)(e->rate*23.0f):1;double pitchStep=std::pow(2.0,(e->pitch/12.0))*(e->sample.sampleRate/44100.0);double direction=e->reverse>.5f?-1.0:1.0;
+ for(int i=0;i<frames;i++){float l=0,r=0;for(auto&v:e->voices){if(!v.on)continue;int ix=(int)v.pos;if(ix<0||ix>=v.end||ix>=(int)e->sample.l.size()){v.on=false;continue;}int lo=(int)((long long)e->sample.l.size()*v.slice/16),hi=v.end;double step=pitchStep*direction;int ix1=step>0?std::min(ix+1,hi-1):std::max(ix-1,lo);float frac=(float)std::fabs(v.pos-ix);float sl=e->sample.l[ix]+(e->sample.l[ix1]-e->sample.l[ix])*frac;float sr=e->sample.r[ix]+(e->sample.r[ix1]-e->sample.r[ix])*frac;l+=sl*v.gain;r+=sr*v.gain;v.pos+=step;if((step>0&&v.pos>=v.end)||(step<0&&v.pos<lo))v.on=false;}
  if(e->rateCounter==0){e->heldL=l;e->heldR=r;}if(++e->rateCounter>=hold)e->rateCounter=0;if(e->mode>.5f){l=quantize(e->heldL,bits);r=quantize(e->heldR,bits);}else{l=e->heldL;r=e->heldR;}
  e->lpL+=alpha*(l-e->lpL);e->lpR+=alpha*(r-e->lpR);l=e->lpL*e->volume;r=e->lpR*e->volume;
  l=std::max(-1.f,std::min(1.f,l));r=std::max(-1.f,std::min(1.f,r));out[i*2]=(int16_t)(l*32767.f);out[i*2+1]=(int16_t)(r*32767.f);
