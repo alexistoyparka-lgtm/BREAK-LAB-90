@@ -4,7 +4,7 @@ A breakbeat sampler plugin project for OpenMPC, targeting first-generation MPC h
 
 ## Project status
 
-**Prototype v0.1.1 builds successfully for ARMv7 and passes the OpenMPC host test suite with AddressSanitizer/UBSan enabled.** The package and skin preview are available as GitHub Actions artifacts.
+**Development version 0.1.2.** The earlier v0.1.1 baseline passed the ARMv7 build and OpenMPC host test suite with AddressSanitizer/UBSan. The changes on the current development branch add WAV parser hardening and slice audition; these latest changes still need a fresh CI run.
 
 This is not yet a finished or hardware-tested plugin. The CI checks validate the wrapper/API integration and produce the correct 32-bit ARM binary, but they do not prove that the plugin loads or performs correctly on an MPC Live 1 running OS 3.10. Do not install it on a production device yet.
 
