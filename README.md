@@ -4,7 +4,7 @@ A breakbeat sampler plugin project for OpenMPC, targeting first-generation MPC h
 
 ## Project status
 
-**Development version 0.1.3.** The earlier v0.1.1 baseline passed the ARMv7 build and OpenMPC host test suite with AddressSanitizer/UBSan. The current development branch adds bounded RIFF parsing, click-reducing slice fades, MIDI velocity handling, live pitch, round-robin voice stealing, selected-slice audition, factory presets and an on-screen sample status; these latest changes still need a fresh CI run.
+**Development version 0.1.4.** The earlier v0.1.1 baseline passed the ARMv7 build and OpenMPC host test suite with AddressSanitizer/UBSan. The current development branch adds bounded RIFF parsing, click-reducing slice fades, MIDI velocity handling, live pitch, round-robin voice stealing, selected-slice audition, reverse-boundary protection, factory presets and an on-screen sample status; these latest changes still need a fresh CI run.
 
 This is not yet a finished or hardware-tested plugin. The CI checks validate the wrapper/API integration and produce the correct 32-bit ARM binary, but they do not prove that the plugin loads or performs correctly on an MPC Live 1 running OS 3.10. Do not install it on a production device yet.
 
@@ -34,7 +34,7 @@ This is not yet a finished or hardware-tested plugin. The CI checks validate the
 ## Target and validation
 
 - Target: first-generation MPC Live (32-bit ARM / armhf)
-- CI: v0.1.1 baseline passed ARMv7 build and ASan/UBSan host tests; v0.1.3 changes are awaiting a fresh CI result
+- CI: v0.1.1 baseline passed ARMv7 build and ASan/UBSan host tests; v0.1.4 changes are awaiting a fresh CI result
 - Hardware: not tested; MPC Live 1 / OS 3.10 validation remains outstanding
 
 ## Copyright
