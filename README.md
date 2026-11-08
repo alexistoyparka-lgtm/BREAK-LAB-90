@@ -4,23 +4,33 @@ A breakbeat sampler plugin project for OpenMPC, targeting first-generation MPC h
 
 ## Project status
 
-This repository is being prepared for a real standalone MPC plugin. The current prototype is an early, unvalidated engine and is **not yet a finished or hardware-tested plugin**.
+**Prototype v0.1.1 builds successfully for ARMv7 and passes the OpenMPC host test suite with AddressSanitizer/UBSan enabled.** The package and skin preview are available as GitHub Actions artifacts.
 
-## Planned features
+This is not yet a finished or hardware-tested plugin. The CI checks validate the wrapper/API integration and produce the correct 32-bit ARM binary, but they do not prove that the plugin loads or performs correctly on an MPC Live 1 running OS 3.10. Do not install it on a production device yet.
 
-- Original built-in break material
+## Current prototype features
+
+- Original bundled break material
 - 16 MIDI/pad-triggered slices
 - Pitch and reverse
 - Clean and vintage processing modes
 - Low-pass filtering, bit-depth and sample-rate reduction
-- Later milestones: WAV import, transient detection, editable slice points, resampling and time-stretch
+- Eight simultaneous playback voices
+
+## Known limitations / next steps
+
+- One bundled WAV only; PCM 16-bit mono or stereo, 44.1 kHz recommended
+- Slices are split into 16 equal regions; no transient detection or editable slice points yet
+- No on-device CPU benchmark or real MPC smoke test
+- WAV import, multiple banks, resampling, pitch-preserving time-stretch and a custom multi-page workflow remain future work
+- Hardware installation requires root shell access and changes to the MPC plugin list; back up first
 
 ## Target and validation
 
 - Target: first-generation MPC Live (32-bit ARM / armhf)
-- Build and API compatibility must be checked against the current OpenMPC SDK
-- A successful remote build does not replace installation and smoke-testing on the actual MPC
+- CI: ARMv7 build, package validation, host tests with ASan/UBSan — passed
+- Hardware: not tested; MPC Live 1 / OS 3.10 validation remains outstanding
 
 ## Copyright
 
-Bundled break material must be original or appropriately licensed. Users are responsible for rights to audio they import.
+Bundled break material is original. Users are responsible for rights to audio they import.
