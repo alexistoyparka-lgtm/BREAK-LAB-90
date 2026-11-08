@@ -21,7 +21,7 @@ static bool make_wav(const std::string &path, uint32_t sample_rate = 48000, int 
     for (uint32_t i = 0; i < frames; ++i) {
         int16_t amp = (int16_t)(1000 + (i / (frames / 16)) * 400);
         int16_t v = (int16_t)(amp + (int)(i % (frames / 16)) * 8);
-        put16(f, (uint16_t)v); if (channels == 2) put16(f, (uint16_t)v);
+        put16(f, (uint16_t)v); if (channels == 2) put16(f, (uint16_t)(-v));
     }
     fclose(f);
     return true;
@@ -80,6 +80,13 @@ int main(int argc, char **argv) {
     int16_t sample_rate_48k_out[128 * 2] = {};
     api->midi(engine, sample_rate_note, 3);
     api->render(engine, sample_rate_48k_out, 128);
+    long stereo_separation = 0;
+    for (int i = 0; i < 64; ++i)
+        stereo_separation += abs((int)sample_rate_48k_out[i * 2] + (int)sample_rate_48k_out[i * 2 + 1]);
+    if (stereo_separation > 64) {
+        fprintf(stderr, "stereo WAV channels were not preserved independently: %ld\n", stereo_separation);
+        api->destroy(engine); return 1;
+    }
 
     // A fresh voice must fade in from silence to avoid a hard slice-edge click.
     void *fade_engine = api->create(dir);
@@ -310,6 +317,6 @@ int main(int argc, char **argv) {
     unlink((breaks + "/break01.wav").c_str());
     rmdir(breaks.c_str());
     rmdir(dir);
-    puts("PASS: bundled break loading, 48 kHz stereo and 44.1 kHz mono WAV loading and sample-rate conversion, click-safe fade-in, all 16 MIDI slices, velocity scaling, Vintage bit-depth/rate crushing, pitch playback/clamping, selected-slice audition, reverse playback direction and malformed RIFF/PCM metadata rejection");
+    puts("PASS: bundled break loading, 48 kHz stereo channel separation, 44.1 kHz mono WAV loading and sample-rate conversion, click-safe fade-in, all 16 MIDI slices, velocity scaling, Vintage bit-depth/rate crushing, pitch playback/clamping, selected-slice audition, reverse playback direction and malformed RIFF/PCM metadata rejection");
     return 0;
 }
