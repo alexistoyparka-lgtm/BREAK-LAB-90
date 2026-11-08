@@ -10,17 +10,17 @@
 static void put16(FILE *f, uint16_t v) { fputc(v & 255, f); fputc((v >> 8) & 255, f); }
 static void put32(FILE *f, uint32_t v) { put16(f, v & 65535); put16(f, v >> 16); }
 
-static bool make_wav(const std::string &path, uint32_t sample_rate = 48000) {
+static bool make_wav(const std::string &path, uint32_t sample_rate = 48000, int channels = 2) {
     FILE *f = fopen(path.c_str(), "wb");
     if (!f) return false;
-    const uint32_t frames = 1600, data_size = frames * 4;
+    const uint32_t frames = 1600, data_size = frames * channels * 2;
     fwrite("RIFF", 1, 4, f); put32(f, 36 + data_size); fwrite("WAVE", 1, 4, f);
     fwrite("fmt ", 1, 4, f); put32(f, 16); put16(f, 1); put16(f, 2);
     put32(f, sample_rate); put32(f, sample_rate * 4); put16(f, 4); put16(f, 16);
     fwrite("data", 1, 4, f); put32(f, data_size);
     for (uint32_t i = 0; i < frames; ++i) {
         int16_t v = (i & 1) ? 7000 : -7000;
-        put16(f, (uint16_t)v); put16(f, (uint16_t)v);
+        put16(f, (uint16_t)v); if (channels == 2) put16(f, (uint16_t)v);
     }
     fclose(f);
     return true;
@@ -149,6 +149,23 @@ int main(int argc, char **argv) {
 
     api->destroy(engine);
 
+    // Mono PCM at 44.1 kHz is also a supported source format.
+    if (!make_wav(breaks + "/break01.wav", 44100, 1)) return 1;
+    engine = api->create(dir);
+    if (!engine) return 1;
+    memset(status, 0, sizeof(status));
+    if (!api->get_param(engine, "status", status, sizeof(status)) || strcmp(status, "break01.wav READY")) {
+        fprintf(stderr, "mono WAV load failed: %s\n", status);
+        api->destroy(engine); return 1;
+    }
+    uint8_t mono_note[3] = {0x90, 36, 100};
+    int16_t mono_out[128 * 2] = {};
+    api->midi(engine, mono_note, 3); api->render(engine, mono_out, 128);
+    long mono_energy = 0;
+    for (int i = 0; i < 256; ++i) mono_energy += (long)mono_out[i] * mono_out[i];
+    api->destroy(engine);
+    if (!mono_energy) { fprintf(stderr, "mono WAV playback produced silence\n"); return 1; }
+
     // Oversized/truncated chunk lengths must be rejected safely, not allocated.
     if (!make_malformed_wav(breaks + "/break01.wav")) return 1;
     engine = api->create(dir);
@@ -164,6 +181,6 @@ int main(int argc, char **argv) {
     unlink((breaks + "/break01.wav").c_str());
     rmdir(breaks.c_str());
     rmdir(dir);
-    puts("PASS: bundled break loading, 48 kHz WAV loading, click-safe fade-in, all 16 MIDI slices, velocity scaling, pitch clamping, selected-slice audition, reverse playback and malformed RIFF rejection");
+    puts("PASS: bundled break loading, 48 kHz stereo and 44.1 kHz mono WAV loading, click-safe fade-in, all 16 MIDI slices, velocity scaling, pitch clamping, selected-slice audition, reverse playback and malformed RIFF rejection");
     return 0;
 }
