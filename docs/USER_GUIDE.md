@@ -1,8 +1,8 @@
-# BREAK LAB 90 — User Guide (development 0.1.4)
+# BREAK LAB 90 — User Guide (development 0.1.5)
 
 ## Current status
 
-This is a development build for the first-generation Akai MPC Live (32-bit ARM / armhf), with MPC OS 3.10 as the intended target. The latest source changes have not yet been confirmed by a fresh ARM build and host test run, and no physical MPC Live 1 test has been completed. Do not install this development package on a production MPC yet.
+This is a development build for the first-generation Akai MPC Live (32-bit ARM / armhf), with MPC OS 3.10 as the intended target. Version 0.1.4 passed ARMv7 build, wrapper and engine smoke tests. The compact “Slice” label change for 0.1.5 is being rebuilt in CI run #72. No physical MPC Live 1 test has been completed; use only a backed-up test device.
 
 ## Supplying your own break
 
