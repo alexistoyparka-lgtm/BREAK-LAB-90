@@ -6,12 +6,22 @@
   "so": "break_lab_90.so",
   "params": "vst/params.json",
   "build": {
-    "sources": ["src/break_lab_90.cpp"],
-    "cflags": ["-std=c++14", "-O2", "-fno-exceptions", "-fno-rtti"],
-    "libs": ["-lm"]
+    "sources": [
+      "src/break_lab_90.cpp"
+    ],
+    "cflags": [
+      "-std=c++14",
+      "-O2",
+      "-fno-exceptions",
+      "-fno-rtti"
+    ],
+    "libs": [
+      "-lm"
+    ]
   },
   "defines": {
     "MODULE_SUBDIR": "\"engine\"",
     "SAMPLE_ACCURATE": 1
-  }
+  },
+  "presets": "presets.json"
 }
