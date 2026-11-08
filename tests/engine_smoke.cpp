@@ -133,7 +133,7 @@ int main(int argc, char **argv) {
     long pitch_difference = 0;
     for (int i = 0; i < 256; ++i) pitch_difference += std::abs((int)normal_out[i] - (int)pitch_out[i]);
     api->destroy(pitch_normal); api->destroy(pitch_up);
-    if (pitch_difference < 1000) { fprintf(stderr, "pitch control did not alter playback rate\\n"); return 1; }
+    if (pitch_difference < 1000) { fprintf(stderr, "pitch control did not alter playback rate\n"); return 1; }
 
     // MIDI velocity must scale the playback amplitude rather than being ignored.
     void *vel_full = api->create(dir);
