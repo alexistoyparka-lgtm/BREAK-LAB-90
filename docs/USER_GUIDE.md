@@ -33,6 +33,7 @@ Supported audio:
 - Slice boundaries are currently 16 equal divisions of the loaded WAV.
 - Eight voices can play simultaneously. When all are busy, the engine steals voices in round-robin order.
 - MIDI velocity scales playback level.
+- The source WAV sample rate is respected when converting to the engine's 44.1 kHz host rate; this is sample-rate conversion, not pitch-preserving time-stretch.
 - Short edge fades reduce clicks at slice starts and ends. Reverse playback is clamped to its own slice and cannot read into the preceding slice.
 
 ## Sound controls
