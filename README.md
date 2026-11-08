@@ -12,8 +12,8 @@ This is not yet a finished or hardware-tested plugin. The CI checks validate the
 
 - Original bundled break material
 - 16 MIDI/pad-triggered slices
-- Pitch (live adjustment) and reverse (applied to newly triggered voices)
-- Clean and vintage processing modes
+- Pitch (live adjustment) and selectable Forward/Reverse playback direction
+- Clean/Vintage processing modes with dedicated on-screen selectors
 - Low-pass filtering, bit-depth and sample-rate reduction
 - Eight simultaneous playback voices
 - MPC page readout confirms whether the bundled WAV loaded
