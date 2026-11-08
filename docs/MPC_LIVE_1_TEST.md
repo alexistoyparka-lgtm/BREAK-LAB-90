@@ -34,7 +34,7 @@ Do not install while MPC is saving a project. Do not run the installer with MPC 
 - Confirm BREAK LAB 90 appears in the instrument list and loads without a scan or load error.
 - Confirm the sample status reads `break01.wav READY`.
 - Trigger MIDI notes 36–51 and verify all 16 slices play.
-- Change Selected Slice and audition with MIDI C4 / note 60.
+- Change the Slice control and audition with MIDI C4 / note 60.
 - Verify Pitch across -24, 0 and +24 semitones.
 - Verify Forward and Reverse on newly triggered slices.
 - Verify Clean/Vintage, Bits and Rate Crush.
