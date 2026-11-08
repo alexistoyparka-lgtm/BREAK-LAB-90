@@ -1,0 +1,56 @@
+{
+  "presets": [
+    {
+      "name": "Clean Break",
+      "values": {
+        "slice": 0,
+        "pitch": 0,
+        "reverse": "Forward",
+        "mode": "Clean",
+        "bits": 16,
+        "rate": 0,
+        "cutoff": 1,
+        "volume": 0.85
+      }
+    },
+    {
+      "name": "Dusty 12-Bit",
+      "values": {
+        "slice": 0,
+        "pitch": 0,
+        "reverse": "Forward",
+        "mode": "Vintage",
+        "bits": 12,
+        "rate": 0.28,
+        "cutoff": 0.78,
+        "volume": 0.85
+      }
+    },
+    {
+      "name": "Dark Warehouse",
+      "values": {
+        "slice": 0,
+        "pitch": -2,
+        "reverse": "Forward",
+        "mode": "Clean",
+        "bits": 16,
+        "rate": 0,
+        "cutoff": 0.34,
+        "volume": 0.85
+      }
+    },
+    {
+      "name": "Reverse Texture",
+      "values": {
+        "slice": 0,
+        "pitch": 0,
+        "reverse": "Reverse",
+        "mode": "Vintage",
+        "bits": 10,
+        "rate": 0.42,
+        "cutoff": 0.62,
+        "volume": 0.82
+      }
+    }
+  ]
+}
