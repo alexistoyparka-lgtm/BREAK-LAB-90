@@ -109,6 +109,26 @@ int main(int argc, char **argv) {
     }
     api->set_param(engine, "pitch", "0");
 
+    // MIDI velocity must scale the playback amplitude rather than being ignored.
+    void *vel_full = api->create(dir);
+    void *vel_half = api->create(dir);
+    uint8_t full_note[3] = {0x90, 36, 127};
+    uint8_t half_note[3] = {0x90, 36, 64};
+    int16_t full_out[128 * 2] = {}, half_out[128 * 2] = {};
+    api->midi(vel_full, full_note, 3); api->render(vel_full, full_out, 128);
+    api->midi(vel_half, half_note, 3); api->render(vel_half, half_out, 128);
+    long full_energy = 0, half_energy = 0;
+    for (int i = 0; i < 256; ++i) {
+        full_energy += (long)full_out[i] * full_out[i];
+        half_energy += (long)half_out[i] * half_out[i];
+    }
+    api->destroy(vel_full); api->destroy(vel_half);
+    double velocity_ratio = full_energy ? (double)half_energy / full_energy : 0.0;
+    if (velocity_ratio < 0.20 || velocity_ratio > 0.32) {
+        fprintf(stderr, "MIDI velocity scaling is incorrect: ratio %.3f\\n", velocity_ratio);
+        api->destroy(engine); return 1;
+    }
+
     api->set_param(engine, "reverse", "1");
     uint8_t reverse_note[3] = {0x90, 51, 100};
     int16_t reverse_out[128 * 2] = {};
