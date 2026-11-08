@@ -15,8 +15,8 @@ static bool make_wav(const std::string &path, uint32_t sample_rate = 48000, int 
     if (!f) return false;
     const uint32_t frames = 1600, data_size = frames * channels * 2;
     fwrite("RIFF", 1, 4, f); put32(f, 36 + data_size); fwrite("WAVE", 1, 4, f);
-    fwrite("fmt ", 1, 4, f); put32(f, 16); put16(f, 1); put16(f, 2);
-    put32(f, sample_rate); put32(f, sample_rate * 4); put16(f, 4); put16(f, 16);
+    fwrite("fmt ", 1, 4, f); put32(f, 16); put16(f, 1); put16(f, channels);
+    put32(f, sample_rate); put32(f, sample_rate * channels * 2); put16(f, channels * 2); put16(f, 16);
     fwrite("data", 1, 4, f); put32(f, data_size);
     for (uint32_t i = 0; i < frames; ++i) {
         int16_t v = (i & 1) ? 7000 : -7000;
