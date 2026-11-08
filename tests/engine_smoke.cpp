@@ -119,6 +119,34 @@ int main(int argc, char **argv) {
         }
     }
 
+    // Eight voices must overlap; a ninth trigger must safely steal rather than crash.
+    void *poly_engine = api->create(dir);
+    void *single_engine = api->create(dir);
+    if (!poly_engine || !single_engine) return 1;
+    uint8_t single_note[3] = {0x90, 36, 20};
+    api->midi(single_engine, single_note, 3);
+    int16_t single_voice_out[128 * 2] = {};
+    api->render(single_engine, single_voice_out, 128);
+    long single_voice_energy = 0;
+    for (int i = 0; i < 256; ++i) single_voice_energy += (long)single_voice_out[i] * single_voice_out[i];
+    for (int note = 36; note < 44; ++note) {
+        uint8_t poly_note[3] = {0x90, (uint8_t)note, 20};
+        api->midi(poly_engine, poly_note, 3);
+    }
+    uint8_t ninth_note[3] = {0x90, 44, 20};
+    api->midi(poly_engine, ninth_note, 3);
+    int16_t poly_out[128 * 2] = {};
+    api->render(poly_engine, poly_out, 128);
+    long poly_energy = 0;
+    for (int i = 0; i < 256; ++i) poly_energy += (long)poly_out[i] * poly_out[i];
+    api->destroy(poly_engine);
+    api->destroy(single_engine);
+    if (!single_voice_energy || poly_energy <= single_voice_energy * 2) {
+        fprintf(stderr, "eight-voice overlap or ninth-voice stealing failed: single=%ld poly=%ld\n",
+                single_voice_energy, poly_energy);
+        api->destroy(engine); return 1;
+    }
+
     // Parameter round-trip and clamping are part of the saved-project contract.
     api->set_param(engine, "pitch", "12");
     char pitch_value[32] = {};
@@ -317,6 +345,6 @@ int main(int argc, char **argv) {
     unlink((breaks + "/break01.wav").c_str());
     rmdir(breaks.c_str());
     rmdir(dir);
-    puts("PASS: bundled break loading, 48 kHz stereo channel separation, 44.1 kHz mono WAV loading and sample-rate conversion, click-safe fade-in, all 16 MIDI slices, velocity scaling, Vintage bit-depth/rate crushing, pitch playback/clamping, selected-slice audition, reverse playback direction and malformed RIFF/PCM metadata rejection");
+    puts("PASS: bundled break loading, 48 kHz stereo channel separation, 44.1 kHz mono WAV loading and sample-rate conversion, click-safe fade-in, all 16 MIDI slices, eight-voice polyphony and voice stealing, velocity scaling, Vintage bit-depth/rate crushing, pitch playback/clamping, selected-slice audition, reverse playback direction and malformed RIFF/PCM metadata rejection");
     return 0;
 }
