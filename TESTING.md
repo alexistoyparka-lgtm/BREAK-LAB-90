@@ -15,6 +15,7 @@ This file deliberately separates automated host/build validation from a real MPC
 | 16 MIDI slices | Notes 36–51 each produce audio | Test added |
 | Polyphony | Eight voices overlap; a ninth trigger steals a voice safely | Test added |
 | Selected slice audition | MIDI note 60 plays selected slice | Test added |
+| Filter | Low-pass cutoff changes the rendered signal | Test added |
 | MIDI velocity | Velocity scales output level | Test added |
 | Vintage processing | Bit-depth reduction and sample-hold rate crush change the rendered signal | Tests added |
 | Pitch | Parameter round-trip, clamping and audible playback-rate change work | Test added |
