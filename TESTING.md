@@ -15,7 +15,7 @@ This file deliberately separates automated host/build validation from a real MPC
 | 16 MIDI slices | Notes 36–51 each produce audio | Test added |
 | Selected slice audition | MIDI note 60 plays selected slice | Test added |
 | MIDI velocity | Velocity scales output level | Test added |
-| Pitch | Parameter round-trip and clamping work | Test added |
+| Pitch | Parameter round-trip, clamping and audible playback-rate change work | Test added |
 | Reverse | Reverse-triggered slice produces audio | Test added |
 | Slice edge fade | First output frame starts at silence; sample remains audible | Test added |
 | Factory presets | Four presets validate and appear in host preset list | Preset data added; CI check pending |
