@@ -30,7 +30,7 @@ This is not yet a finished or hardware-tested plugin. The CI checks validate the
 ## Target and validation
 
 - Target: first-generation MPC Live (32-bit ARM / armhf)
-- CI: ARMv7 build, package validation, host tests with ASan/UBSan — passed
+- CI: v0.1.1 baseline passed ARMv7 build and ASan/UBSan host tests; v0.1.2 changes are awaiting a fresh CI result
 - Hardware: not tested; MPC Live 1 / OS 3.10 validation remains outstanding
 
 ## Copyright
