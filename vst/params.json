@@ -2,7 +2,7 @@
   "params": [
     {
       "key": "slice",
-      "name": "Selected Slice",
+      "name": "Slice",
       "type": "float",
       "display": "int",
       "min": 0,
