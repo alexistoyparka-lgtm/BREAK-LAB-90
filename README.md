@@ -12,7 +12,7 @@ This is not yet a finished or hardware-tested plugin. The CI checks validate the
 
 - Original bundled break material
 - 16 MIDI/pad-triggered slices
-- Pitch and reverse
+- Pitch (live adjustment) and reverse (applied to newly triggered voices)
 - Clean and vintage processing modes
 - Low-pass filtering, bit-depth and sample-rate reduction
 - Eight simultaneous playback voices
@@ -22,7 +22,7 @@ This is not yet a finished or hardware-tested plugin. The CI checks validate the
 - One bundled WAV only; PCM 16-bit mono or stereo, 8–192 kHz accepted (44.1 kHz recommended); decoded sample memory capped at 64 MiB
 - Pads MIDI notes 36–51 trigger the 16 slices; MIDI C4 (note 60) auditions the slice selected by the Selected Slice control
 - Slices are split into 16 equal regions; no transient detection or editable slice points yet
-- WAV parsing validates chunk bounds and format fields; automated smoke test includes 48 kHz playback input and malformed chunk rejection
+- WAV parsing validates chunk bounds and format fields; automated smoke tests load the bundled break, exercise 48 kHz input and reject malformed chunks
 - No on-device CPU benchmark or real MPC smoke test
 - WAV import, multiple banks, resampling, pitch-preserving time-stretch and a custom multi-page workflow remain future work
 - Hardware installation requires root shell access and changes to the MPC plugin list; back up first
