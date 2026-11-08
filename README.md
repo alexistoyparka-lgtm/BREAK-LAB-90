@@ -17,6 +17,7 @@ This is not yet a finished or hardware-tested plugin. The CI checks validate the
 - Low-pass filtering, bit-depth and sample-rate reduction
 - Eight simultaneous playback voices with short per-slice fade-in/fade-out to reduce boundary clicks
 - MPC page readout confirms whether the bundled WAV loaded
+- Four factory presets in the MPC PRESET menu: Clean Break, Dusty 12-Bit, Dark Warehouse and Reverse Texture
 
 ## Known limitations / next steps
 
