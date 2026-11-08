@@ -22,7 +22,7 @@ This file deliberately separates automated host/build validation from a real MPC
 
 ## Physical MPC Live 1 / OS 3.10
 
-<badge>NOT TESTED</badge>
+**NOT TESTED**
 
 Only test after a fresh CI run has produced the ARMv7 package. Back up the MPC's plugin list and any existing plugin folder before installing. Keep the first test non-destructive.
 
