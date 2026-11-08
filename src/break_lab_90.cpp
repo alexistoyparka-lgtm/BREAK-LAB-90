@@ -75,7 +75,7 @@ static int get_param_engine(void*p,const char*k,char*b,int n){if(!p||!k||!b||n<2
  GET("slice",slice) GET("pitch",pitch) GET("reverse",reverse) GET("mode",mode) GET("bits",bits) GET("rate",rate) GET("cutoff",cutoff) GET("volume",volume)
 #undef GET
  if(!std::strcmp(k,"status")){std::snprintf(b,n,"%s",e->status.c_str());return 1;}return 0;}
-static void render_engine(void*p,int16_t*out,int frames){Engine*e=(Engine*)p;if(!e||!out)return;float cutoffHz=150.0f+e->cutoff*18000.0f;float alpha=1.0f-std::exp(-2.0f*(float)PI*cutoffHz/44100.0f);int bits=(int)std::round(e->bits);int hold=1+(int)(e->rate*23.0f);
+static void render_engine(void*p,int16_t*out,int frames){Engine*e=(Engine*)p;if(!e||!out)return;float cutoffHz=150.0f+e->cutoff*18000.0f;float alpha=1.0f-std::exp(-2.0f*(float)PI*cutoffHz/44100.0f);int bits=(int)std::round(e->bits);int hold=e->mode>.5f?1+(int)(e->rate*23.0f):1;
  for(int i=0;i<frames;i++){float l=0,r=0;for(auto&v:e->voices){if(!v.on)continue;int ix=(int)v.pos;if(ix<0||ix>=v.end||ix>=(int)e->sample.l.size()){v.on=false;continue;}l+=e->sample.l[ix]*v.gain;r+=e->sample.r[ix]*v.gain;v.pos+=v.step;if((v.step>0&&v.pos>=v.end)||(v.step<0&&v.pos<((long long)e->sample.l.size()*v.slice/16)))v.on=false;}
  if(e->rateCounter++%hold==0){e->heldL=l;e->heldR=r;}if(e->mode>.5f){l=quantize(e->heldL,bits);r=quantize(e->heldR,bits);}else{l=e->heldL;r=e->heldR;}
  e->lpL+=alpha*(l-e->lpL);e->lpR+=alpha*(r-e->lpR);l=e->lpL*e->volume;r=e->lpR*e->volume;
