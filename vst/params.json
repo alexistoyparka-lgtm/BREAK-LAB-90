@@ -6,5 +6,7 @@
   {"key":"bits","name":"Bits","type":"float","min":4,"max":16,"default":12},
   {"key":"rate","name":"Rate Crush","type":"float","min":0,"max":1,"default":0},
   {"key":"cutoff","name":"Filter","type":"float","min":0,"max":1,"default":1},
-  {"key":"volume","name":"Volume","type":"float","min":0,"max":1,"default":0.85}
+  {"key":"volume","name":"Volume","type":"float","min":0,"max":1,"default":0.85},
+  {"key":"status","name":"Sample Status","type":"readout","display":"string","poll":false,"min":0,"max":1,"default":0}
+
 ]
