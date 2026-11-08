@@ -6,7 +6,7 @@ This plan is for the first-generation MPC Live running MPC OS 3.10. Do not insta
 
 1. Open the repository's **Actions** tab.
 2. Open the successful **Build BREAK LAB 90** run for the commit being tested.
-3. Download the artifact named `break-lab-90-v0.1.4`. The artifact contains the ARMv7 ZIP and skin preview PNGs.
+3. Download the artifact named `break-lab-90-v0.1.5`. The artifact contains the ARMv7 ZIP and skin preview PNGs.
 4. Keep the ZIP unchanged. Test that exact ZIP; do not rebuild or repackage it.
 
 The artifact is a CI run artifact, not a published release, and expires after 14 days.
