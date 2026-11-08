@@ -1,6 +1,6 @@
 # BREAK LAB 90 — Validation Checklist
 
-This file deliberately separates automated host/build validation from a real MPC test. A successful host test is not evidence that the plugin works on the MPC Live 1.
+This file deliberately separates automated host/build validation from a real MPC test. A successful host test is not evidence that the plugin works on the MPC Live 1. See [the device test plan](docs/MPC_LIVE_1_TEST.md) for the safe installation sequence and acceptance steps.
 
 ## Automated checks
 
