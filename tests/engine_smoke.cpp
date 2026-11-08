@@ -156,6 +156,49 @@ int main(int argc, char **argv) {
         api->destroy(engine); return 1;
     }
 
+    // Vintage mode must apply bit-depth reduction to the rendered signal.
+    void *clean_engine = api->create(dir);
+    void *vintage_engine = api->create(dir);
+    if (!clean_engine || !vintage_engine) return 1;
+    api->set_param(vintage_engine, "mode", "1");
+    api->set_param(vintage_engine, "bits", "4");
+    uint8_t character_note[3] = {0x90, 36, 100};
+    int16_t clean_out[128 * 2] = {}, vintage_out[128 * 2] = {};
+    api->midi(clean_engine, character_note, 3);
+    api->midi(vintage_engine, character_note, 3);
+    api->render(clean_engine, clean_out, 128);
+    api->render(vintage_engine, vintage_out, 128);
+    long character_difference = 0;
+    for (int i = 0; i < 256; ++i) character_difference += abs((int)clean_out[i] - (int)vintage_out[i]);
+    api->destroy(clean_engine);
+    api->destroy(vintage_engine);
+    if (character_difference < 1000) {
+        fprintf(stderr, "Vintage bit-depth reduction did not change the signal\n");
+        api->destroy(engine); return 1;
+    }
+
+    // Rate Crush must hold samples for multiple output frames in Vintage mode.
+    clean_engine = api->create(dir);
+    vintage_engine = api->create(dir);
+    if (!clean_engine || !vintage_engine) return 1;
+    api->set_param(vintage_engine, "mode", "1");
+    api->set_param(vintage_engine, "bits", "16");
+    api->set_param(vintage_engine, "rate", "1");
+    memset(clean_out, 0, sizeof(clean_out));
+    memset(vintage_out, 0, sizeof(vintage_out));
+    api->midi(clean_engine, character_note, 3);
+    api->midi(vintage_engine, character_note, 3);
+    api->render(clean_engine, clean_out, 128);
+    api->render(vintage_engine, vintage_out, 128);
+    long rate_difference = 0;
+    for (int i = 0; i < 256; ++i) rate_difference += abs((int)clean_out[i] - (int)vintage_out[i]);
+    api->destroy(clean_engine);
+    api->destroy(vintage_engine);
+    if (rate_difference < 1000) {
+        fprintf(stderr, "Rate Crush did not change the sample-hold output\n");
+        api->destroy(engine); return 1;
+    }
+
     api->set_param(engine, "reverse", "1");
     uint8_t reverse_note[3] = {0x90, 51, 100};
     int16_t reverse_out[128 * 2] = {};
@@ -252,6 +295,6 @@ int main(int argc, char **argv) {
     unlink((breaks + "/break01.wav").c_str());
     rmdir(breaks.c_str());
     rmdir(dir);
-    puts("PASS: bundled break loading, 48 kHz stereo and 44.1 kHz mono WAV loading, click-safe fade-in, all 16 MIDI slices, velocity scaling, pitch playback/clamping, selected-slice audition, reverse playback direction and malformed RIFF/PCM metadata rejection");
+    puts("PASS: bundled break loading, 48 kHz stereo and 44.1 kHz mono WAV loading, click-safe fade-in, all 16 MIDI slices, velocity scaling, Vintage bit-depth/rate crushing, pitch playback/clamping, selected-slice audition, reverse playback direction and malformed RIFF/PCM metadata rejection");
     return 0;
 }
