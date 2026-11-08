@@ -2,7 +2,7 @@
 
 ## Current status
 
-This is a development build for the first-generation Akai MPC Live (32-bit ARM / armhf), with MPC OS 3.10 as the intended target. Version 0.1.4 passed ARMv7 build, wrapper and engine smoke tests. The compact “Slice” label change for 0.1.5 is being rebuilt in CI run #72. No physical MPC Live 1 test has been completed; use only a backed-up test device.
+This is a development build for the first-generation Akai MPC Live (32-bit ARM / armhf), with MPC OS 3.10 as the intended target. Version 0.1.4 passed ARMv7 build, wrapper and engine smoke tests. The compact “Slice” label change for 0.1.5 passed the full CI build and host test run #72. No physical MPC Live 1 test has been completed; use only a backed-up test device.
 
 ## Supplying your own break
 
