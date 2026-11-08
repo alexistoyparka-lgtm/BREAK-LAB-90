@@ -24,5 +24,5 @@ jobs:
       host_test: '"$MPC_VST/tools/test_port.sh" vst.json && bash tests/run_engine_smoke.sh'
       extra: engine/breaks:engine/breaks
       user_data: engine
-      about: "Breakbeat sampler prototype for MPC Live Gen1."
+      about: "Breakbeat sampler prototype for MPC Live Gen1; includes direct WAV and MIDI slice smoke tests."
       dry_run: true
