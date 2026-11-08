@@ -1,0 +1,17 @@
+{
+  "name": "BREAK LAB 90",
+  "vendor": "OpenBench",
+  "uid": "Brk90",
+  "version": 100,
+  "so": "break_lab_90.so",
+  "params": "vst/params.json",
+  "build": {
+    "sources": ["src/break_lab_90.cpp"],
+    "cflags": ["-std=c++14", "-O2", "-fno-exceptions", "-fno-rtti"],
+    "libs": ["-lm"]
+  },
+  "defines": {
+    "MODULE_SUBDIR": "\"engine\"",
+    "SAMPLE_ACCURATE": 1
+  }
+}
