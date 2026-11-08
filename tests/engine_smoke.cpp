@@ -73,6 +73,15 @@ int main() {
     for (int i = 0; i < 256; ++i) reverse_energy += (long)reverse_out[i] * reverse_out[i];
     if (!reverse_energy) { fprintf(stderr, "reverse playback produced silence\n"); api->destroy(engine); return 1; }
 
+    api->set_param(engine, "slice", "7");
+    uint8_t selected_note[3] = {0x90, 60, 100};
+    int16_t selected_out[128 * 2] = {};
+    api->midi(engine, selected_note, 3);
+    api->render(engine, selected_out, 128);
+    long selected_energy = 0;
+    for (int i = 0; i < 256; ++i) selected_energy += (long)selected_out[i] * selected_out[i];
+    if (!selected_energy) { fprintf(stderr, "selected-slice audition produced silence\\n"); api->destroy(engine); return 1; }
+
     api->destroy(engine);
 
     // Oversized/truncated chunk lengths must be rejected safely, not allocated.
@@ -90,6 +99,6 @@ int main() {
     unlink((breaks + "/break01.wav").c_str());
     rmdir(breaks.c_str());
     rmdir(dir);
-    puts("PASS: 48 kHz WAV loading, all 16 MIDI slices, reverse playback and malformed WAV rejection");
+    puts("PASS: 48 kHz WAV loading, all 16 MIDI slices, selected-slice audition, reverse playback and malformed WAV rejection");
     return 0;
 }
