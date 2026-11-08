@@ -197,6 +197,27 @@ int main(int argc, char **argv) {
         api->destroy(engine); return 1;
     }
 
+    // The low-pass filter control must alter the rendered signal.
+    void *dark_filter = api->create(dir);
+    void *open_filter = api->create(dir);
+    if (!dark_filter || !open_filter) return 1;
+    api->set_param(dark_filter, "cutoff", "0");
+    api->set_param(open_filter, "cutoff", "1");
+    uint8_t filter_note[3] = {0x90, 36, 100};
+    int16_t dark_out[128 * 2] = {}, open_out[128 * 2] = {};
+    api->midi(dark_filter, filter_note, 3);
+    api->midi(open_filter, filter_note, 3);
+    api->render(dark_filter, dark_out, 128);
+    api->render(open_filter, open_out, 128);
+    long filter_difference = 0;
+    for (int i = 0; i < 256; ++i) filter_difference += abs((int)dark_out[i] - (int)open_out[i]);
+    api->destroy(dark_filter);
+    api->destroy(open_filter);
+    if (filter_difference < 1000) {
+        fprintf(stderr, "filter cutoff control did not change the signal\n");
+        api->destroy(engine); return 1;
+    }
+
     // Vintage mode must apply bit-depth reduction to the rendered signal.
     void *clean_engine = api->create(dir);
     void *vintage_engine = api->create(dir);
@@ -345,6 +366,6 @@ int main(int argc, char **argv) {
     unlink((breaks + "/break01.wav").c_str());
     rmdir(breaks.c_str());
     rmdir(dir);
-    puts("PASS: bundled break loading, 48 kHz stereo channel separation, 44.1 kHz mono WAV loading and sample-rate conversion, click-safe fade-in, all 16 MIDI slices, eight-voice polyphony and voice stealing, velocity scaling, Vintage bit-depth/rate crushing, pitch playback/clamping, selected-slice audition, reverse playback direction and malformed RIFF/PCM metadata rejection");
+    puts("PASS: bundled break loading, 48 kHz stereo channel separation, 44.1 kHz mono WAV loading and sample-rate conversion, click-safe fade-in, all 16 MIDI slices, eight-voice polyphony and voice stealing, filter cutoff, velocity scaling, Vintage bit-depth/rate crushing, pitch playback/clamping, selected-slice audition, reverse playback direction and malformed RIFF/PCM metadata rejection");
     return 0;
 }
