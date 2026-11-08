@@ -23,8 +23,5 @@
     "MODULE_SUBDIR": "\"engine\"",
     "SAMPLE_ACCURATE": 1
   },
-  "presets": "presets.json",
-  "short_names": {
-    "Selected Slice": "SLICE"
-  }
+  "presets": "presets.json"
 }
