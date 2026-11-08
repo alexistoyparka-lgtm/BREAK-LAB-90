@@ -1,0 +1,11 @@
+NEXT DEVELOPMENT MILESTONES
+
+1. Validate the project layout, params.json schema and engine API against the current OpenMPC toolchain.
+2. Make the first host build pass tools/test_port.sh.
+3. Add audio-thread-safe sample loading and multi-WAV bank selection.
+4. Implement transient detection and adjustable slice start/end points.
+5. Design custom MPC skin pages (BROWSE / SLICE / TONE) and Q-Link mappings.
+6. Benchmark CPU on Gen1 before attempting pitch-preserving time stretch or resampling.
+7. Test on the user's MPC Live 1 / OS 3.10 with backup and recovery plan.
+
+Do not install the current prototype on hardware.
