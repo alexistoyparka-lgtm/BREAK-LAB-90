@@ -8,7 +8,7 @@ A breakbeat sampler plugin project for OpenMPC, targeting first-generation MPC h
 
 This is not yet a finished or hardware-tested plugin. The CI checks validate the wrapper/API integration and produce the correct 32-bit ARM binary, but they do not prove that the plugin loads or performs correctly on an MPC Live 1 running OS 3.10. Do not install it on a production device yet.
 
-[Read the development user guide](docs/USER_GUIDE.md) for WAV requirements, file placement, MIDI mapping and control behavior.
+[Read the development user guide](docs/USER_GUIDE.md) for WAV requirements, file placement, MIDI mapping and control behavior. See [TESTING.md](TESTING.md) for automated checks and the physical MPC acceptance checklist.
 
 ## Current prototype features
 
