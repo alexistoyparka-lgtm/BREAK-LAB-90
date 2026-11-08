@@ -121,6 +121,20 @@ int main(int argc, char **argv) {
     }
     api->set_param(engine, "pitch", "0");
 
+    // Pitch must change the actual playback rate, not only the displayed parameter.
+    void *pitch_normal = api->create(dir);
+    void *pitch_up = api->create(dir);
+    if (!pitch_normal || !pitch_up) return 1;
+    api->set_param(pitch_up, "pitch", "12");
+    uint8_t pitch_note[3] = {0x90, 36, 100};
+    int16_t normal_out[128 * 2] = {}, pitch_out[128 * 2] = {};
+    api->midi(pitch_normal, pitch_note, 3); api->render(pitch_normal, normal_out, 128);
+    api->midi(pitch_up, pitch_note, 3); api->render(pitch_up, pitch_out, 128);
+    long pitch_difference = 0;
+    for (int i = 0; i < 256; ++i) pitch_difference += std::abs((int)normal_out[i] - (int)pitch_out[i]);
+    api->destroy(pitch_normal); api->destroy(pitch_up);
+    if (pitch_difference < 1000) { fprintf(stderr, "pitch control did not alter playback rate\\n"); return 1; }
+
     // MIDI velocity must scale the playback amplitude rather than being ignored.
     void *vel_full = api->create(dir);
     void *vel_half = api->create(dir);
