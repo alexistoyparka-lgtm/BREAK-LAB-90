@@ -93,6 +93,22 @@ int main(int argc, char **argv) {
         }
     }
 
+    // Parameter round-trip and clamping are part of the saved-project contract.
+    api->set_param(engine, "pitch", "12");
+    char pitch_value[32] = {};
+    if (!api->get_param(engine, "pitch", pitch_value, sizeof(pitch_value)) || strcmp(pitch_value, "12.000")) {
+        fprintf(stderr, "pitch parameter round-trip failed: %s\n", pitch_value);
+        api->destroy(engine); return 1;
+    }
+    api->set_param(engine, "pitch", "99");
+    memset(pitch_value, 0, sizeof(pitch_value));
+    api->get_param(engine, "pitch", pitch_value, sizeof(pitch_value));
+    if (strcmp(pitch_value, "24.000")) {
+        fprintf(stderr, "pitch parameter was not clamped: %s\n", pitch_value);
+        api->destroy(engine); return 1;
+    }
+    api->set_param(engine, "pitch", "0");
+
     api->set_param(engine, "reverse", "1");
     uint8_t reverse_note[3] = {0x90, 51, 100};
     int16_t reverse_out[128 * 2] = {};
