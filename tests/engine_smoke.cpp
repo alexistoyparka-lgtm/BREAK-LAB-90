@@ -20,7 +20,7 @@ static bool make_wav(const std::string &path, uint32_t sample_rate = 48000, int 
     fwrite("data", 1, 4, f); put32(f, data_size);
     for (uint32_t i = 0; i < frames; ++i) {
         int16_t amp = (int16_t)(1000 + (i / (frames / 16)) * 400);
-        int16_t v = (i & 1) ? amp : -amp;
+        int16_t v = (int16_t)(amp + (int)(i % (frames / 16)) * 8);
         put16(f, (uint16_t)v); if (channels == 2) put16(f, (uint16_t)v);
     }
     fclose(f);
