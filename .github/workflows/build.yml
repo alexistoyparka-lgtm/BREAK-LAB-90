@@ -1,0 +1,25 @@
+name: Build BREAK LAB 90
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "vst.json"
+      - "src/**"
+      - "vst/**"
+      - "engine/**"
+      - ".github/workflows/build.yml"
+  workflow_dispatch:
+
+jobs:
+  build-armv7:
+    uses: open-mpc/mpc-vst-plugins/.github/workflows/vst-release.yml@11d340572dcc93778f341a9484c5ae6c51126abe
+    with:
+      tag: break-lab-90-v0.1.0
+      version: "0.1.0"
+      tools_ref: 11d340572dcc93778f341a9484c5ae6c51126abe
+      vst_dir: .
+      build: '"$MPC_VST/tools/build_port.sh" vst.json armv7'
+      user_data: engine
+      about: "Breakbeat sampler prototype for MPC Live Gen1."
+      dry_run: true
