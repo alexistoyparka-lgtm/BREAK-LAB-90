@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
     }
     api->destroy(selected_engine); api->destroy(first_engine);
     if (!first_energy || selected_energy <= first_energy * 4) {
-        fprintf(stderr, "C4 did not audition the selected slice: selected=%ld first=%ld\\n", selected_energy, first_energy);
+        fprintf(stderr, "C4 did not audition the selected slice: selected=%ld first=%ld\n", selected_energy, first_energy);
         return 1;
     }
 
