@@ -1,4 +1,4 @@
-# BREAK LAB 90 — User Guide (development 0.1.3)
+# BREAK LAB 90 — User Guide (development 0.1.4)
 
 ## Current status
 
@@ -33,7 +33,7 @@ Supported audio:
 - Slice boundaries are currently 16 equal divisions of the loaded WAV.
 - Eight voices can play simultaneously. When all are busy, the engine steals voices in round-robin order.
 - MIDI velocity scales playback level.
-- Short edge fades reduce clicks at slice starts and ends.
+- Short edge fades reduce clicks at slice starts and ends. Reverse playback is clamped to its own slice and cannot read into the preceding slice.
 
 ## Sound controls
 
