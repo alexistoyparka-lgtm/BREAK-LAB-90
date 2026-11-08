@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
     api->midi(pitch_normal, pitch_note, 3); api->render(pitch_normal, normal_out, 128);
     api->midi(pitch_up, pitch_note, 3); api->render(pitch_up, pitch_out, 128);
     long pitch_difference = 0;
-    for (int i = 0; i < 256; ++i) pitch_difference += std::abs((int)normal_out[i] - (int)pitch_out[i]);
+    for (int i = 0; i < 256; ++i) pitch_difference += abs((int)normal_out[i] - (int)pitch_out[i]);
     api->destroy(pitch_normal); api->destroy(pitch_up);
     if (pitch_difference < 1000) { fprintf(stderr, "pitch control did not alter playback rate\n"); return 1; }
 
