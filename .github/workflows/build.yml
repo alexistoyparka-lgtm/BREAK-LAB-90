@@ -20,6 +20,7 @@ jobs:
       tools_ref: 11d340572dcc93778f341a9484c5ae6c51126abe
       vst_dir: .
       build: '"$MPC_VST/tools/build_port.sh" vst.json armv7'
+      host_test: '"$MPC_VST/tools/test_port.sh" vst.json'
       extra: engine/breaks:engine/breaks
       user_data: engine
       about: "Breakbeat sampler prototype for MPC Live Gen1."
