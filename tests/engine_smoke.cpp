@@ -19,7 +19,8 @@ static bool make_wav(const std::string &path, uint32_t sample_rate = 48000, int 
     put32(f, sample_rate); put32(f, sample_rate * channels * 2); put16(f, channels * 2); put16(f, 16);
     fwrite("data", 1, 4, f); put32(f, data_size);
     for (uint32_t i = 0; i < frames; ++i) {
-        int16_t amp = (int16_t)(1000 + (i / (frames / 16)) * 400);\n        int16_t v = (i & 1) ? amp : -amp;
+        int16_t amp = (int16_t)(1000 + (i / (frames / 16)) * 400);
+        int16_t v = (i & 1) ? amp : -amp;
         put16(f, (uint16_t)v); if (channels == 2) put16(f, (uint16_t)v);
     }
     fclose(f);
