@@ -16,6 +16,7 @@ This is not yet a finished or hardware-tested plugin. The CI checks validate the
 - Clean and vintage processing modes
 - Low-pass filtering, bit-depth and sample-rate reduction
 - Eight simultaneous playback voices
+- MPC page readout confirms whether the bundled WAV loaded
 
 ## Known limitations / next steps
 
