@@ -9,8 +9,8 @@ This file deliberately separates automated host/build validation from a real MPC
 | ARMv7 / armhf build | 32-bit ARM VST binary is produced | Awaiting a fresh 0.1.4 CI result |
 | OpenMPC wrapper host test | Parameter, preset and wrapper checks pass | Awaiting a fresh 0.1.4 CI result |
 | Engine smoke test under ASan/UBSan | No sanitizer errors; bundled WAV loads | Awaiting a fresh 0.1.4 CI result |
-| 48 kHz stereo WAV | Loads and plays | Test added |
-| 44.1 kHz mono WAV | Loads and plays | Test added |
+| 48 kHz stereo WAV | Loads, preserves independent left/right channels and uses the source-rate playback step | Tests added |
+| 44.1 kHz mono WAV | Loads and plays at the correct host-rate step | Test added |
 | Invalid RIFF size / PCM byte rate | File is rejected | Test added |
 | 16 MIDI slices | Notes 36–51 each produce audio | Test added |
 | Selected slice audition | MIDI note 60 plays selected slice | Test added |
