@@ -19,7 +19,7 @@ static bool make_wav(const std::string &path, uint32_t sample_rate = 48000, int 
     put32(f, sample_rate); put32(f, sample_rate * channels * 2); put16(f, channels * 2); put16(f, 16);
     fwrite("data", 1, 4, f); put32(f, data_size);
     for (uint32_t i = 0; i < frames; ++i) {
-        int16_t v = (i & 1) ? 7000 : -7000;
+        int16_t amp = (int16_t)(1000 + (i / (frames / 16)) * 400);\n        int16_t v = (i & 1) ? amp : -amp;
         put16(f, (uint16_t)v); if (channels == 2) put16(f, (uint16_t)v);
     }
     fclose(f);
@@ -150,16 +150,28 @@ int main(int argc, char **argv) {
     for (int i = 0; i < 256; ++i) reverse_energy += (long)reverse_out[i] * reverse_out[i];
     if (!reverse_energy) { fprintf(stderr, "reverse playback produced silence\n"); api->destroy(engine); return 1; }
 
-    api->set_param(engine, "slice", "7");
-    uint8_t selected_note[3] = {0x90, 60, 100};
-    int16_t selected_out[128 * 2] = {};
-    api->midi(engine, selected_note, 3);
-    api->render(engine, selected_out, 128);
-    long selected_energy = 0;
-    for (int i = 0; i < 256; ++i) selected_energy += (long)selected_out[i] * selected_out[i];
-    if (!selected_energy) { fprintf(stderr, "selected-slice audition produced silence\n"); api->destroy(engine); return 1; }
-
     api->destroy(engine);
+
+    // C4 must audition the selected slice, not always slice 1.
+    void *selected_engine = api->create(dir);
+    void *first_engine = api->create(dir);
+    if (!selected_engine || !first_engine) return 1;
+    api->set_param(selected_engine, "slice", "7");
+    uint8_t selected_note[3] = {0x90, 60, 100};
+    uint8_t first_note[3] = {0x90, 36, 100};
+    int16_t selected_out[128 * 2] = {}, first_out[128 * 2] = {};
+    api->midi(selected_engine, selected_note, 3); api->render(selected_engine, selected_out, 128);
+    api->midi(first_engine, first_note, 3); api->render(first_engine, first_out, 128);
+    long selected_energy = 0, first_energy = 0;
+    for (int i = 0; i < 256; ++i) {
+        selected_energy += (long)selected_out[i] * selected_out[i];
+        first_energy += (long)first_out[i] * first_out[i];
+    }
+    api->destroy(selected_engine); api->destroy(first_engine);
+    if (!first_energy || selected_energy <= first_energy * 4) {
+        fprintf(stderr, "C4 did not audition the selected slice: selected=%ld first=%ld\\n", selected_energy, first_energy);
+        return 1;
+    }
 
     // Mono PCM at 44.1 kHz is also a supported source format.
     if (!make_wav(breaks + "/break01.wav", 44100, 1)) return 1;
