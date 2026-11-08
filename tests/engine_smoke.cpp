@@ -35,7 +35,7 @@ static bool make_malformed_wav(const std::string &path) {
     return true;
 }
 
-int main() {
+int main(int argc, char **argv) {
     char root[] = "/tmp/break-lab-90-test-XXXXXX";
     char *dir = mkdtemp(root);
     if (!dir) { perror("mkdtemp"); return 1; }
@@ -44,6 +44,17 @@ int main() {
     if (!make_wav(breaks + "/break01.wav")) { fprintf(stderr, "could not create WAV\n"); return 1; }
 
     const mpc_engine_t *api = mpc_engine();
+    if (argc > 1) {
+        void *bundled = api->create(argv[1]);
+        char bundled_status[128] = {};
+        if (!bundled || !api->get_param(bundled, "status", bundled_status, sizeof(bundled_status)) ||
+            strcmp(bundled_status, "break01.wav READY")) {
+            fprintf(stderr, "bundled break failed to load: %s\\n", bundled_status);
+            if (bundled) api->destroy(bundled);
+            return 1;
+        }
+        api->destroy(bundled);
+    }
     void *engine = api->create(dir);
     if (!engine) { fprintf(stderr, "engine creation failed\n"); return 1; }
     char status[128] = {};
@@ -99,6 +110,6 @@ int main() {
     unlink((breaks + "/break01.wav").c_str());
     rmdir(breaks.c_str());
     rmdir(dir);
-    puts("PASS: 48 kHz WAV loading, all 16 MIDI slices, selected-slice audition, reverse playback and malformed WAV rejection");
+    puts("PASS: bundled break loading, 48 kHz WAV loading, all 16 MIDI slices, selected-slice audition, reverse playback and malformed WAV rejection");
     return 0;
 }
