@@ -1,5 +1,5 @@
 [
-  {"key":"slice","name":"Slice","type":"float","min":0,"max":15,"default":0},
+  {"key":"slice","name":"Selected Slice","type":"float","display":"int","min":0,"max":15,"default":0},
   {"key":"pitch","name":"Pitch","type":"float","min":-24,"max":24,"default":0},
   {"key":"reverse","name":"Reverse","type":"float","min":0,"max":1,"default":0},
   {"key":"mode","name":"Mode","type":"float","min":0,"max":1,"default":0},
