@@ -197,6 +197,30 @@ int main(int argc, char **argv) {
         api->destroy(engine); return 1;
     }
 
+    // Master volume must scale the output independently of MIDI velocity.
+    void *volume_full = api->create(dir);
+    void *volume_low = api->create(dir);
+    if (!volume_full || !volume_low) return 1;
+    api->set_param(volume_low, "volume", "0.25");
+    uint8_t volume_note[3] = {0x90, 36, 100};
+    int16_t volume_full_out[128 * 2] = {}, volume_low_out[128 * 2] = {};
+    api->midi(volume_full, volume_note, 3);
+    api->midi(volume_low, volume_note, 3);
+    api->render(volume_full, volume_full_out, 128);
+    api->render(volume_low, volume_low_out, 128);
+    long volume_full_energy = 0, volume_low_energy = 0;
+    for (int i = 0; i < 256; ++i) {
+        volume_full_energy += (long)volume_full_out[i] * volume_full_out[i];
+        volume_low_energy += (long)volume_low_out[i] * volume_low_out[i];
+    }
+    api->destroy(volume_full);
+    api->destroy(volume_low);
+    double volume_ratio = volume_full_energy ? (double)volume_low_energy / volume_full_energy : 0.0;
+    if (volume_ratio < 0.07 || volume_ratio > 0.11) {
+        fprintf(stderr, "master volume scaling is incorrect: ratio %.3f\n", volume_ratio);
+        api->destroy(engine); return 1;
+    }
+
     // The low-pass filter control must alter the rendered signal.
     void *dark_filter = api->create(dir);
     void *open_filter = api->create(dir);
@@ -366,6 +390,6 @@ int main(int argc, char **argv) {
     unlink((breaks + "/break01.wav").c_str());
     rmdir(breaks.c_str());
     rmdir(dir);
-    puts("PASS: bundled break loading, 48 kHz stereo channel separation, 44.1 kHz mono WAV loading and sample-rate conversion, click-safe fade-in, all 16 MIDI slices, eight-voice polyphony and voice stealing, filter cutoff, velocity scaling, Vintage bit-depth/rate crushing, pitch playback/clamping, selected-slice audition, reverse playback direction and malformed RIFF/PCM metadata rejection");
+    puts("PASS: bundled break loading, 48 kHz stereo channel separation, 44.1 kHz mono WAV loading and sample-rate conversion, click-safe fade-in, all 16 MIDI slices, eight-voice polyphony and voice stealing, filter cutoff, master volume and velocity scaling, Vintage bit-depth/rate crushing, pitch playback/clamping, selected-slice audition, reverse playback direction and malformed RIFF/PCM metadata rejection");
     return 0;
 }
