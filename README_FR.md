@@ -1,29 +1,34 @@
 # BREAK LAB 90 — prototype OpenMPC Gen1
 
-**État : prototype source uniquement — pas encore compilé ni testé sur une MPC.**
+<badge></badge>
+**État : prototype v0.1.1 compilé avec succès en ARMv7 et tests hôte OpenMPC réussis (AddressSanitizer + UBSan). Pas encore testé sur une MPC réelle.**
 
-Cible : MPC Live 1 / Live II / One / X / Key 61 Gen1 (ARM32), via le framework OpenMPC.
+La compilation, les tests du wrapper et la génération du paquet passent sur GitHub Actions. Cela confirme la production d'un binaire ARM 32 bits, mais ne garantit pas encore que le plugin se charge et fonctionne correctement sur une MPC Live 1 sous OS 3.10. **Ne pas installer cette version sur une MPC de production.**
 
-## Fonctions présentes dans ce premier moteur
+## Fonctions présentes
 
 - Instrument VST2 avec 16 slices déclenchées par MIDI : notes 36 à 51.
 - Lecture WAV PCM 16-bit mono ou stéréo.
 - Pitch de -24 à +24 demi-tons.
-- Reverse, filtre passe-bas, volume.
+- Reverse, filtre passe-bas et volume.
 - Modes CLEAN et VINTAGE (réduction de profondeur de bits et de fréquence d'échantillonnage).
 - 8 voix de lecture simultanées.
+- Un break original est fourni dans le paquet.
 
-## Limites
+## Limites et prochaines étapes
 
-- Un seul WAV est prévu pour le moment : `engine/breaks/break01.wav`.
-- Le WAV doit être PCM 16-bit, mono ou stéréo. 44,1 kHz recommandé.
-- Le découpage est égal en 16 tranches ; pas encore de détection de transitoires ni d'édition des points de coupe.
-- L'import depuis l'écran MPC, les banques multiples, le time-stretch indépendant du pitch, le resampling et le skin tactile personnalisé restent à développer.
-- Le moteur doit être adapté/vérifié contre l'API OpenMPC actuelle, compilé, testé sur PC, puis validé sur le matériel réel. **Ne pas installer cette version sur la MPC.**
+- Un seul WAV : `engine/breaks/break01.wav`.
+- Format : PCM 16-bit, mono ou stéréo ; 44,1 kHz recommandé.
+- Découpage égal en 16 tranches ; pas encore de détection de transitoires ni d'édition des points de coupe.
+- Pas encore de mesure CPU ni de test de chargement sur la MPC réelle.
+- Import WAV depuis l'écran MPC, banques multiples, resampling, time-stretch indépendant du pitch et workflow tactile personnalisé restent à développer.
+- L'installation non officielle nécessite un accès shell root et modifie la liste des plugins MPC. Sauvegarde indispensable.
 
-## Cible de compilation
+## Cible et validation
 
-MPC Live 1 = Gen1 ARM32 (armhf). Le build doit utiliser la toolchain OpenMPC actuelle. Le build distant via GitHub Actions est envisagé afin de ne pas nécessiter Docker sur le Mac.
+- MPC Live 1 = Gen1 ARM32 (armhf), OS 3.10 visé.
+- CI : compilation ARMv7, validation du paquet et tests hôte avec ASan/UBSan — **réussis**.
+- Matériel réel : **pas encore testé**. Le chargement, l'interface, les Q-Links, la sauvegarde de projet et les performances restent à valider sur la MPC Live 1.
 
 ## Références
 
