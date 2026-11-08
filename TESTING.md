@@ -6,9 +6,9 @@ This file deliberately separates automated host/build validation from a real MPC
 
 | Check | Expected result | Current status |
 |---|---|---|
-| ARMv7 / armhf build | 32-bit ARM VST binary is produced | Awaiting a fresh 0.1.3 CI result |
-| OpenMPC wrapper host test | Parameter, preset and wrapper checks pass | Awaiting a fresh 0.1.3 CI result |
-| Engine smoke test under ASan/UBSan | No sanitizer errors; bundled WAV loads | Awaiting a fresh 0.1.3 CI result |
+| ARMv7 / armhf build | 32-bit ARM VST binary is produced | Awaiting a fresh 0.1.4 CI result |
+| OpenMPC wrapper host test | Parameter, preset and wrapper checks pass | Awaiting a fresh 0.1.4 CI result |
+| Engine smoke test under ASan/UBSan | No sanitizer errors; bundled WAV loads | Awaiting a fresh 0.1.4 CI result |
 | 48 kHz stereo WAV | Loads and plays | Test added |
 | 44.1 kHz mono WAV | Loads and plays | Test added |
 | Invalid RIFF size / PCM byte rate | File is rejected | Test added |
@@ -16,7 +16,7 @@ This file deliberately separates automated host/build validation from a real MPC
 | Selected slice audition | MIDI note 60 plays selected slice | Test added |
 | MIDI velocity | Velocity scales output level | Test added |
 | Pitch | Parameter round-trip, clamping and audible playback-rate change work | Test added |
-| Reverse | Reverse-triggered slice produces audio | Test added |
+| Reverse | Reverse-triggered slice produces audio without reading outside its slice | Test added; boundary fix included |
 | Slice edge fade | First output frame starts at silence; sample remains audible | Test added |
 | Factory presets | Four presets validate and appear in host preset list | Preset data added; CI check pending |
 
