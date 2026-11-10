@@ -1,17 +1,39 @@
-NEXT DEVELOPMENT MILESTONES
+BREAK LAB 90 — DEVELOPMENT HANDOFF
+
+CURRENT CANDIDATE
+- Version: 0.1.5
+- Target: first-generation MPC Live, ARMv7 / armhf, MPC OS 3.10
+- Latest CI: run #72, successful
+- Package: break-lab-90-v0.1.5 artifact, ARMv7 ZIP
+- Status: ready for a controlled first hardware test on a backed-up test device; not hardware-certified.
 
 COMPLETED
 - [x] Validate project layout, params.json schema and engine API against the pinned OpenMPC toolchain.
-- [x] Build the first ARMv7 plugin package successfully.
+- [x] Build the ARMv7 plugin package successfully.
 - [x] Pass tools/test_port.sh with AddressSanitizer and UBSan enabled.
 - [x] Validate the generated package and confirm the plugin binary is ELF32 ARM hard-float.
+- [x] Add direct engine-level smoke tests for WAV loading, MIDI slice triggering, reverse, pitch, effects, polyphony, velocity and malformed WAV rejection.
+- [x] Inspect generated skin preview and correct the truncated Slice control label.
+- [x] Verify package SHA256SUMS and shell syntax of install.sh / uninstall.sh.
+- [x] Run installer/uninstaller round-trip against a disposable MPC.settings fixture; plugin registration, backup, removal and service stop/start hooks passed.
 
-REMAINING
-1. Add direct engine-level audio tests for WAV loading, MIDI slice triggering, reverse, pitch and effects.
-2. Add audio-thread-safe sample loading and multi-WAV bank selection.
-3. Implement transient detection and adjustable slice start/end points.
-4. Improve the custom MPC skin pages (BROWSE / SLICE / TONE) and Q-Link mappings.
-5. Benchmark CPU on Gen1 before attempting pitch-preserving time stretch or resampling.
-6. Test on the user's MPC Live 1 / OS 3.10 with a backup and recovery plan.
+REMAINING — HARDWARE ACCEPTANCE
+1. Confirm root SSH access to the MPC Live 1. The installer cannot run without it.
+2. Make a complete backup of MPC.settings, projects and any existing plugin folder.
+3. Install the exact CI artifact; do not rebuild or modify the ZIP.
+4. Verify plugin discovery, skin rendering, parameter controls and Q-Link mappings.
+5. Verify all 16 MIDI slices, C4 selected-slice audition, pitch, reverse, Clean/Vintage, Bits, Rate Crush, Filter and Volume.
+6. Save, close, reopen and verify project/preset persistence.
+7. Run a 10-minute pattern with up to eight overlapping voices; check dropouts, hangs and CPU stability.
+8. Restart MPC and confirm the plugin remains discoverable and the WAV reloads.
+9. Keep the settings backup until the device is confirmed healthy.
 
-Do not install the current prototype on hardware. The CI package is not a substitute for a real-device smoke test.
+DO NOT CLAIM HARDWARE COMPATIBILITY UNTIL THE ABOVE CHECKS PASS.
+
+FUTURE DEVELOPMENT AFTER FIRST DEVICE TEST
+- Audio-thread-safe sample replacement and multi-WAV bank selection.
+- Transient detection and per-slice editable boundaries.
+- Improved multi-page BROWSE / SLICE / TONE workflow and Q-Link mappings.
+- CPU profiling before attempting pitch-preserving time stretch or resampling.
+
+The current artifact is a test candidate, not a production release.
