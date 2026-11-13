@@ -1,72 +1,44 @@
-# BREAK LAB 90 — candidat de test MPC Live Gen1
+# BREAK LAB 90 — candidat MPC Live Gen1
 
-**Version de développement : 0.1.5 — candidat au premier test matériel.**
+**Version de développement : 0.1.6 — paquet USB MPC OS 3.10.1 en préparation.**
 
-BREAK LAB 90 est un instrument sampler de breaks pour OpenMPC, ciblant la MPC Live de première génération (ARM 32 bits / armhf). MPC OS 3.10 est la version visée.
+BREAK LAB 90 est un sampler breakbeat pour MPC de première génération (ARMv7 / armhf).
 
-## État de validation
+## Compatibilité visée
 
-- Compilation ARMv7 / armhf : réussie dans GitHub Actions, run **#72**.
-- Tests du wrapper OpenMPC : réussis dans le run #72.
-- Tests moteur WAV/MIDI/audio sous ASan + UBSan : réussis dans le run #72.
-- Paquet généré : ZIP MPC ARMv7, binaire ELF32 ARM hard-float.
-- Contrôles du paquet : sommes SHA-256 valides, scripts installateur/désinstallateur syntaxiquement valides.
-- Essai à blanc de l'installation puis de la désinstallation avec un faux MPC.settings : réussi.
-- Interface : aperçu de la skin générée inspecté.
-- MPC Live 1 physique / OS 3.10 : **pas encore testé**.
+La cible est la MPC Live Gen1 sous MPC OS 3.10.1 ou ultérieur, avec External Plugin Support activé. Le workflow mis à jour utilise l'outil de packaging OpenMPC actuel pour produire, en plus du ZIP ARMv7 historique, un ZIP au format dossier SDK destiné au répertoire VST2 Plugins.
 
-Le paquet est donc prêt pour un **premier essai contrôlé sur une MPC de test sauvegardée**. Cela ne constitue pas une certification matérielle et il ne faut pas l'utiliser sur une MPC contenant un projet important sans sauvegarde complète.
+Cette évolution vise une installation par clé USB, sans SSH, sans root et sans modification manuelle de MPC.settings. Elle n'est pas encore validée sur une MPC physique.
 
-## Fonctions disponibles
+## Installation prévue sur MPC OS 3.10.1+
 
-- Lecture d'un break WAV PCM 16 bits, mono ou stéréo.
-- 16 slices égales, déclenchées par MIDI notes 36 à 51.
-- Note MIDI 60 (C4) : audition de la slice sélectionnée.
-- Pitch de -24 à +24 demi-tons.
-- Lecture Forward / Reverse.
-- Modes Clean et Vintage.
-- Réduction de profondeur de bits et Rate Crush en mode Vintage.
-- Filtre passe-bas et volume général.
-- 8 voix simultanées avec vol de voix en cas de surcharge.
-- Quatre presets : Clean Break, Dusty 12-Bit, Dark Warehouse et Reverse Texture.
-- Un break original est fourni.
+1. Activer Menu → Preferences → Enhancements → Enable Enhancements et External Plugin Support, puis redémarrer.
+2. Lancer le workflow Build BREAK LAB 90 sur la branche compat/mpc-os-3.10.1-usb-package.
+3. Télécharger l'artefact du build réussi et extraire uniquement le fichier *-mpc-sdk.zip.
+4. Copier le dossier contenant plugin.json directement dans VST2 Plugins à la racine d'une clé USB.
+5. Laisser la clé branchée, créer une piste Plugin et chercher External VST Plugins → OpenBench → BREAK LAB 90.
 
-## Format audio
+Ne pas utiliser l'ancien ZIP ARMv7 comme paquet USB direct. Voir docs/MPC_LIVE_1_TEST.md.
 
-Le fichier chargé au démarrage est :
+## Fonctions du prototype
 
-    engine/breaks/break01.wav
+- 16 slices déclenchées par MIDI notes 36 à 51 ; audition de la slice sélectionnée par MIDI C4 / note 60.
+- Lecture WAV PCM 16 bits mono/stéréo.
+- Pitch de -24 à +24 demi-tons et lecture Forward / Reverse.
+- Modes Clean et Vintage, filtre passe-bas, Bitcrush et Rate Crush.
+- Huit voix simultanées et quatre presets d'usine.
 
-Formats acceptés : WAV RIFF, PCM linéaire 16 bits, mono ou stéréo, 8 à 192 kHz. 44,1 kHz est recommandé. La mémoire audio décodée est limitée à environ 64 Mio.
+## Validation
 
-Pour remplacer le break, sauvegarder le WAV fourni puis remplacer break01.wav par son propre fichier portant exactement ce nom. Il faut ensuite fermer et rouvrir le plugin. Il n'existe pas encore de navigateur/import WAV à l'écran.
+- Compilation ARMv7 et tests hôte : résultats historiques dans GitHub Actions.
+- Nouveau paquet MPC OS 3.10.1 : à confirmer par une nouvelle exécution du workflow.
+- Détection, affichage, audio, MIDI, sauvegarde/réouverture et stabilité sur MPC Live Gen1 : pas encore testés sur matériel physique.
+- Benchmark CPU sur MPC : non mesuré.
 
-## Installation
+Aucune compatibilité à 100 % ne sera revendiquée avant validation de la checklist matérielle complète.
 
-L'installation est non officielle et nécessite un accès shell **root** à la MPC. Le script :
+## Limites fonctionnelles
 
-1. vérifie l'architecture et les fichiers du paquet ;
-2. demande confirmation et arrête MPC ;
-3. sauvegarde MPC.settings ;
-4. installe le dossier complet du plugin sous /sdcard/Synths ;
-5. ajoute l'entrée du plugin à la liste MPC ;
-6. redémarre MPC.
+Un seul WAV chargé, 16 divisions égales, pas encore de navigateur/import WAV, de points de coupe éditables, de détection de transitoires ni de time-stretch préservant la hauteur.
 
-Faire une sauvegarde de MPC.settings, des projets importants et de tout dossier plugin existant avant l'installation. Ne jamais interrompre le script pendant la modification des fichiers. La désinstallation est fournie et conserve le dossier de données utilisateur.
-
-Voir le guide d'installation et de test MPC Live 1 (docs/MPC_LIVE_1_TEST.md) et la checklist de validation (TESTING.md).
-
-## Limites connues
-
-- Un seul WAV chargé à la fois.
-- Découpage fixe en 16 parts égales.
-- Pas de détection automatique de transitoires.
-- Pas de déplacement manuel des points de coupe.
-- Pas de time-stretch indépendant du pitch ni de resampling.
-- Pas encore de benchmark CPU ni de validation réelle sur MPC Live 1.
-
-## Conclusion
-
-**Le build 0.1.5 est compilé et vérifié côté hôte ; le prochain jalon est le test réel sur MPC Live 1 / OS 3.10.** Le chargement du plugin, l'affichage tactile, les Q-Links, la lecture audio, la sauvegarde/réouverture de projet, le redémarrage et la stabilité 10 minutes restent à confirmer sur la machine physique.
-
-Le break fourni est original. L'utilisateur est responsable des droits sur les fichiers audio qu'il importe.
+Le break fourni est original. L'utilisateur est responsable des droits sur ses propres fichiers audio.
