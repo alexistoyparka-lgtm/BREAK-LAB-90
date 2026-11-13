@@ -2,7 +2,7 @@ name: Build BREAK LAB 90
 
 on:
   push:
-    branches: [main]
+    branches: [main, compat/mpc-os-3.10.1-usb-package]
     paths:
       - "vst.json"
       - "params.lock"
@@ -16,15 +16,17 @@ on:
 
 jobs:
   build-armv7:
-    uses: open-mpc/mpc-vst-plugins/.github/workflows/vst-release.yml@11d340572dcc93778f341a9484c5ae6c51126abe
+    uses: open-mpc/mpc-vst-plugins/.github/workflows/vst-release.yml@52c1fb072966d7de77e97dd9eec0544548b042dc
     with:
-      tag: break-lab-90-v0.1.5
-      version: "0.1.5"
-      tools_ref: 11d340572dcc93778f341a9484c5ae6c51126abe
+      tag: break-lab-90-v0.1.6
+      version: "0.1.6"
+      tools_ref: 52c1fb072966d7de77e97dd9eec0544548b042dc
       vst_dir: .
       build: '"$MPC_VST/tools/build_port.sh" vst.json armv7'
       host_test: '"$MPC_VST/tools/test_port.sh" vst.json && bash tests/run_engine_smoke.sh'
       extra: engine/breaks:engine/breaks
       user_data: engine
-      about: "Breakbeat sampler prototype for MPC Live Gen1; includes WAV, MIDI, playback and slice-boundary smoke tests."
+      about: "Breakbeat sampler for first-generation MPC hardware; ARMv7/armhf build with 16 MIDI slices, WAV playback and vintage processing."
+      plugin_id: break-lab-90
+      license: MIT
       dry_run: true
