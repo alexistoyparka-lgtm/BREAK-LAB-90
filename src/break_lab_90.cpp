@@ -94,7 +94,7 @@ static void* create_engine(const char* data_dir){
 static void destroy_engine(void*p){delete (Engine*)p;}
 static void midi_engine(void*p,const uint8_t*m,int n){if(!p||!m||n<3)return;Engine*e=(Engine*)p;int st=m[0]&0xf0,note=m[1],vel=m[2];if(st==0x90&&vel>0&&note>=36&&note<=51){int sl=note-36;e->heldSlice=sl;start_voice(e,sl,vel/127.f);}else if(st==0x90&&vel>0&&note==60){int sl=std::max(0,std::min(15,(int)std::round(e->slice)));e->heldSlice=sl;start_voice(e,sl,vel/127.f);}else if((st==0x90&&vel==0)||st==0x80){/* one-shot slices: note-off deliberately does not choke */}}
 static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)return;Engine*e=(Engine*)p;
-  if(!std::strcmp(k,"reverse")||!std::strcmp(k,"mode"))std::fprintf(stderr,"DBG set %s=%s\\n",k,v);
+
   // The VST wrapper sends the visible option label for enum parameters, not its numeric index.
   // Accept both labels and numeric values so presets, automation and host writes agree.
   if(!std::strcmp(k,"reverse")){
@@ -111,8 +111,8 @@ static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)ret
 #undef SET
 }
 static int get_param_engine(void*p,const char*k,char*b,int n){if(!p||!k||!b||n<2)return 0;Engine*e=(Engine*)p;float x=0;
- if(!std::strcmp(k,"reverse")){std::snprintf(b,n,"%.3f",e->reverse);std::fprintf(stderr,"DBG get reverse field=%.3f\\n",e->reverse);return 1;}
- if(!std::strcmp(k,"mode")){std::snprintf(b,n,"%.3f",e->mode);std::fprintf(stderr,"DBG get mode field=%.3f\\n",e->mode);return 1;}
+ if(!std::strcmp(k,"reverse")){std::snprintf(b,n,"%d",(int)std::round(e->reverse));return 1;}
+ if(!std::strcmp(k,"mode")){std::snprintf(b,n,"%d",(int)std::round(e->mode));return 1;}
 #define GET(name,field) if(!std::strcmp(k,name)){x=e->field;std::snprintf(b,n,"%.3f",x);return 1;}
  GET("slice",slice) GET("pitch",pitch) GET("reverse",reverse) GET("mode",mode) GET("bits",bits) GET("rate",rate) GET("cutoff",cutoff) GET("volume",volume)
 #undef GET
