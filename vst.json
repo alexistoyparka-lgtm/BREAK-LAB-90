@@ -1,7 +1,7 @@
 {
   "name": "BREAK LAB 90",
   "vendor": "OpenBench",
-  "uid": "Brk9",
+  "uid": "42726b39",
   "version": 150,
   "so": "break_lab_90.so",
   "params": "vst/params.json",
