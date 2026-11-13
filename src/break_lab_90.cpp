@@ -111,6 +111,8 @@ static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)ret
 #undef SET
 }
 static int get_param_engine(void*p,const char*k,char*b,int n){if(!p||!k||!b||n<2)return 0;Engine*e=(Engine*)p;float x=0;
+ if(!std::strcmp(k,"reverse")){std::snprintf(b,n,"%.3f",e->reverse);std::fprintf(stderr,"DBG get reverse field=%.3f\\n",e->reverse);return 1;}
+ if(!std::strcmp(k,"mode")){std::snprintf(b,n,"%.3f",e->mode);std::fprintf(stderr,"DBG get mode field=%.3f\\n",e->mode);return 1;}
 #define GET(name,field) if(!std::strcmp(k,name)){x=e->field;std::snprintf(b,n,"%.3f",x);return 1;}
  GET("slice",slice) GET("pitch",pitch) GET("reverse",reverse) GET("mode",mode) GET("bits",bits) GET("rate",rate) GET("cutoff",cutoff) GET("volume",volume)
 #undef GET
