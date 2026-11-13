@@ -1,6 +1,6 @@
 # BREAK LAB 90 — candidat MPC Live Gen1
 
-**Version de développement : 0.1.6 — paquet USB MPC OS 3.10.1 en préparation.**
+**Version candidate : 0.1.6 — paquet USB MPC OS 3.10.1 compilé et contrôlé automatiquement.**
 
 BREAK LAB 90 est un sampler breakbeat pour MPC de première génération (ARMv7 / armhf).
 
@@ -30,9 +30,11 @@ Ne pas utiliser l'ancien ZIP ARMv7 comme paquet USB direct. Voir docs/MPC_LIVE_1
 
 ## Validation
 
-- Compilation ARMv7 et tests hôte : résultats historiques dans GitHub Actions.
-- Nouveau paquet MPC OS 3.10.1 : à confirmer par une nouvelle exécution du workflow.
-- Détection, affichage, audio, MIDI, sauvegarde/réouverture et stabilité sur MPC Live Gen1 : pas encore testés sur matériel physique.
+- GitHub Actions run #79 : compilation ARMv7 réussie ; export VSTPluginMain ; GLIBC maximale 2.29.
+- Tests hôte OpenMPC : PASSED ; tests moteur sous AddressSanitizer/UndefinedBehaviorSanitizer : PASSED (chargement WAV, 16 slices, polyphonie 8 voix, pitch, reverse, filtre, Vintage, Rate Crush, velocity, volume et rejet de WAV malformés).
+- Contrôle catalogue : 0 avertissement ; ZIP MPC OS 3.10.1+ généré avec plugin.json, binaire ARM32, skin et WAV intégré.
+- Compatibilité de skin annoncée par l'outil : MPC OS 3.x uniquement.
+- Détection, affichage, tactile, audio réel, sauvegarde/réouverture, redémarrage et stabilité sur MPC Live Gen1 : pas encore testés sur matériel physique.
 - Benchmark CPU sur MPC : non mesuré.
 
 Aucune compatibilité à 100 % ne sera revendiquée avant validation de la checklist matérielle complète.
