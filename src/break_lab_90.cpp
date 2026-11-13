@@ -94,6 +94,7 @@ static void* create_engine(const char* data_dir){
 static void destroy_engine(void*p){delete (Engine*)p;}
 static void midi_engine(void*p,const uint8_t*m,int n){if(!p||!m||n<3)return;Engine*e=(Engine*)p;int st=m[0]&0xf0,note=m[1],vel=m[2];if(st==0x90&&vel>0&&note>=36&&note<=51){int sl=note-36;e->heldSlice=sl;start_voice(e,sl,vel/127.f);}else if(st==0x90&&vel>0&&note==60){int sl=std::max(0,std::min(15,(int)std::round(e->slice)));e->heldSlice=sl;start_voice(e,sl,vel/127.f);}else if((st==0x90&&vel==0)||st==0x80){/* one-shot slices: note-off deliberately does not choke */}}
 static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)return;Engine*e=(Engine*)p;
+  if(!std::strcmp(k,"reverse")||!std::strcmp(k,"mode"))std::fprintf(stderr,"DBG set %s=%s\\n",k,v);
   // The VST wrapper sends the visible option label for enum parameters, not its numeric index.
   // Accept both labels and numeric values so presets, automation and host writes agree.
   if(!std::strcmp(k,"reverse")){
