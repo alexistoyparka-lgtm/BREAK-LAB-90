@@ -2,6 +2,8 @@
 
 Target: first-generation MPC Live, MPC OS 3.10.1 or later, ARMv7 / armhf.
 
+Candidate 0.1.6 CI build: run #79 passed (ARMv7 build, OpenMPC host test, engine ASan/UBSan smoke test and catalog check). The generated SDK ZIP SHA-256 is `eaa01153f1935971939c8c4c9d9a9ad9f54a04a96b3a7ef185543d59bacf091f`. This is not a substitute for the physical-device checklist below.
+
 This is a controlled USB-folder installation test. It does not require SSH, root access, or manual edits to MPC.settings. Do not claim hardware compatibility until the physical acceptance checklist below passes.
 
 ## 1. Get the exact package
