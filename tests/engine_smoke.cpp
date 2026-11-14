@@ -414,6 +414,33 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // PAULA has its own compact clock-divider range; changing its rate must
+    // alter the sample-hold output independently of Vintage's wider crush range.
+    void *paula_clock_fast = api->create(dir);
+    void *paula_clock_slow = api->create(dir);
+    if (!paula_clock_fast || !paula_clock_slow) return 1;
+    api->set_param(paula_clock_fast, "mode", "2");
+    api->set_param(paula_clock_slow, "mode", "2");
+    api->set_param(paula_clock_fast, "bits", "8");
+    api->set_param(paula_clock_slow, "bits", "8");
+    api->set_param(paula_clock_fast, "rate", "0");
+    api->set_param(paula_clock_slow, "rate", "1");
+    uint8_t paula_note[3] = {0x90, 36, 100};
+    int16_t paula_fast_out[256] = {}, paula_slow_out[256] = {};
+    api->midi(paula_clock_fast, paula_note, 3);
+    api->midi(paula_clock_slow, paula_note, 3);
+    api->render(paula_clock_fast, paula_fast_out, 128);
+    api->render(paula_clock_slow, paula_slow_out, 128);
+    long paula_clock_difference = 0;
+    for (int i = 0; i < 256; ++i)
+        paula_clock_difference += abs((int)paula_fast_out[i] - (int)paula_slow_out[i]);
+    api->destroy(paula_clock_fast);
+    api->destroy(paula_clock_slow);
+    if (paula_clock_difference < 100) {
+        fprintf(stderr, "PAULA clock control did not change sample playback: %ld\\n", paula_clock_difference);
+        return 1;
+    }
+
     // A PCM file with an inconsistent byte rate must be rejected.
     if (!make_bad_byte_rate_wav(breaks + "/break01.wav")) return 1;
     engine = api->create(dir);
