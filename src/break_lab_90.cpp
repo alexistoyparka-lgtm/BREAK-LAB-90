@@ -5,6 +5,7 @@
 extern "C" {
 #include "engine.h"
 }
+#include "amiga_dsp.h"
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -24,6 +25,8 @@ struct Engine {
   float slice=0, pitch=0, reverse=0, mode=0, bits=16, rate=0, cutoff=1, volume=.85f;
   float lpL=0, lpR=0;
   int heldSlice=0;
+  int sliceStart[16]={}; int sliceEnd[16]={};
+  float interpolation=1;
   int rateCounter=0;
   float heldL=0, heldR=0;
   std::string status="NO WAV: add breaks/break01.wav";
@@ -76,7 +79,7 @@ static bool load_wav(const char* path, Sample& s) {
 static void start_voice(Engine*e,int sl,float vel){
   if(e->sample.l.empty()) return;
   sl=std::max(0,std::min(15,sl));
-  int total=(int)e->sample.l.size(), a=(int)((long long)total*sl/16), b=(int)((long long)total*(sl+1)/16);
+  int total=(int)e->sample.l.size(), a=e->sliceStart[sl], b=e->sliceEnd[sl];
   if(b-a<2)return;
   int slot=-1;for(int i=0;i<8;i++)if(!e->voices[i].on){slot=i;break;}if(slot<0)slot=e->voiceCursor;e->voiceCursor=(slot+1)%8;Voice*v=&e->voices[slot];
   v->on=true;v->slice=sl;v->gain=std::max(0.f,std::min(1.f,vel));v->begin=a;v->end=b;v->direction=e->reverse>.5f?-1:1;v->fadeFrames=std::max(8,e->sample.sampleRate/500);v->fadeFrames=std::min(v->fadeFrames,(b-a)/2);
@@ -88,19 +91,43 @@ static float quantize(float x,int bits){bits=std::max(4,std::min(16,bits));float
 
 static void* create_engine(const char* data_dir){
   Engine*e=new Engine();
-  if(data_dir){std::string p(data_dir);if(!p.empty()&&p.back()!='/')p+='/';p+="breaks/break01.wav";if(load_wav(p.c_str(),e->sample))e->status="break01.wav READY";}
+  if(data_dir){
+    std::string p(data_dir);if(!p.empty()&&p.back()!='/')p+='/';p+="breaks/break01.wav";
+    if(load_wav(p.c_str(),e->sample)){
+      e->status="break01.wav READY";
+      const int total=(int)e->sample.l.size();
+      for(int i=0;i<16;i++){e->sliceStart[i]=(int)((long long)total*i/16);e->sliceEnd[i]=(int)((long long)total*(i+1)/16);}
+      // Analyze off the audio thread and map detected attacks to 16 playable regions.
+      std::vector<float> mono(total);
+      for(int i=0;i<total;i++) mono[i]=0.5f*(e->sample.l[i]+e->sample.r[i]);
+      bl90::Onset onsets[64];
+      const int found=bl90::detect_onsets(mono.data(),total,e->sample.sampleRate,0.55f,24,onsets,64);
+      if(found>=4){
+        int prev=0; bool valid=true;
+        for(int i=1;i<16;i++){
+          const int pick=(i*found)/16;
+          int boundary=onsets[std::min(found-1,pick)].frame;
+          boundary=std::max(prev+128,std::min(total-(16-i)*128,boundary));
+          if(boundary<=prev){valid=false;break;}
+          e->sliceEnd[i-1]=boundary; e->sliceStart[i]=boundary; prev=boundary;
+        }
+        if(valid){e->sliceStart[0]=0;e->sliceEnd[15]=total;}
+        else for(int i=0;i<16;i++){e->sliceStart[i]=(int)((long long)total*i/16);e->sliceEnd[i]=(int)((long long)total*(i+1)/16);}
+      }
+    }
+  }
   return e;
 }
 static void destroy_engine(void*p){delete (Engine*)p;}
 static void midi_engine(void*p,const uint8_t*m,int n){if(!p||!m||n<3)return;Engine*e=(Engine*)p;int st=m[0]&0xf0,note=m[1],vel=m[2];if(st==0x90&&vel>0&&note>=36&&note<=51){int sl=note-36;e->heldSlice=sl;start_voice(e,sl,vel/127.f);}else if(st==0x90&&vel>0&&note==60){int sl=std::max(0,std::min(15,(int)std::round(e->slice)));e->heldSlice=sl;start_voice(e,sl,vel/127.f);}else if((st==0x90&&vel==0)||st==0x80){/* one-shot slices: note-off deliberately does not choke */}}
 static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)return;Engine*e=(Engine*)p;float x=(float)std::atof(v);
 #define SET(name,field,lo,hi) if(!std::strcmp(k,name)){e->field=std::max((float)(lo),std::min((float)(hi),x));return;}
- SET("slice",slice,0,15) SET("pitch",pitch,-24,24) SET("reverse",reverse,0,1) SET("mode",mode,0,1) SET("bits",bits,4,16) SET("rate",rate,0,1) SET("cutoff",cutoff,0,1) SET("volume",volume,0,1)
+ SET("slice",slice,0,15) SET("interpolation",interpolation,0,2) SET("pitch",pitch,-24,24) SET("reverse",reverse,0,1) SET("mode",mode,0,1) SET("bits",bits,4,16) SET("rate",rate,0,1) SET("cutoff",cutoff,0,1) SET("volume",volume,0,1)
 #undef SET
 }
 static int get_param_engine(void*p,const char*k,char*b,int n){if(!p||!k||!b||n<2)return 0;Engine*e=(Engine*)p;float x=0;
 #define GET(name,field) if(!std::strcmp(k,name)){x=e->field;std::snprintf(b,n,"%.3f",x);return 1;}
- GET("slice",slice) GET("pitch",pitch) GET("reverse",reverse) GET("mode",mode) GET("bits",bits) GET("rate",rate) GET("cutoff",cutoff) GET("volume",volume)
+ GET("slice",slice) GET("interpolation",interpolation) GET("pitch",pitch) GET("reverse",reverse) GET("mode",mode) GET("bits",bits) GET("rate",rate) GET("cutoff",cutoff) GET("volume",volume)
 #undef GET
  if(!std::strcmp(k,"status")){std::snprintf(b,n,"%s",e->status.c_str());return 1;}return 0;}
 static void render_engine(void *p, int16_t *out, int frames) {
@@ -118,7 +145,7 @@ static void render_engine(void *p, int16_t *out, int frames) {
     for (auto &v : e->voices) {
       if (!v.on) continue;
 
-      const int lo = (int)((long long)e->sample.l.size() * v.slice / 16);
+      const int lo = v.begin;
       const int hi = v.end;
       // Check the slice boundary before reading: reverse playback below the
       // slice start must never leak a frame from the preceding slice.
@@ -131,8 +158,17 @@ static void render_engine(void *p, int16_t *out, int frames) {
       const int ix = (int)std::floor(v.pos);
       const int ix1 = std::max(lo, std::min(ix + 1, hi - 1));
       const float frac = (float)(v.pos - ix);
-      const float sl = e->sample.l[ix] + (e->sample.l[ix1] - e->sample.l[ix]) * frac;
-      const float sr = e->sample.r[ix] + (e->sample.r[ix1] - e->sample.r[ix]) * frac;
+      const int ixm=std::max(lo,ix-1), ix2=std::min(hi-1,ix+2);
+      float sl, sr;
+      if(e->interpolation<0.5f){
+        sl=e->sample.l[ix]; sr=e->sample.r[ix];
+      } else if(e->interpolation>1.5f){
+        sl=bl90::cubic4(e->sample.l[ixm],e->sample.l[ix],e->sample.l[ix1],e->sample.l[ix2],frac);
+        sr=bl90::cubic4(e->sample.r[ixm],e->sample.r[ix],e->sample.r[ix1],e->sample.r[ix2],frac);
+      } else {
+        sl=e->sample.l[ix]+(e->sample.l[ix1]-e->sample.l[ix])*frac;
+        sr=e->sample.r[ix]+(e->sample.r[ix1]-e->sample.r[ix])*frac;
+      }
 
       const double fromStart = v.direction > 0 ? v.pos - v.begin : (v.end - 1) - v.pos;
       const double toEnd = v.direction > 0 ? (v.end - 1) - v.pos : v.pos - v.begin;
@@ -154,8 +190,8 @@ static void render_engine(void *p, int16_t *out, int frames) {
     }
     if (++e->rateCounter >= hold) e->rateCounter = 0;
     if (e->mode > .5f) {
-      l = quantize(e->heldL, bits);
-      r = quantize(e->heldR, bits);
+      l = bl90::paula_quantize(e->heldL, bits);
+      r = bl90::paula_quantize(e->heldR, bits);
     } else {
       l = e->heldL;
       r = e->heldR;
