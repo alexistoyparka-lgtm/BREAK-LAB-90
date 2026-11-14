@@ -8,7 +8,7 @@ This file separates automated host/build validation, package validation and phys
 |---|---|---|
 | ARMv7 / armhf build | 32-bit ARM VST binary is produced | Passed in CI run #72 |
 | OpenMPC wrapper host test | Parameter, preset and wrapper checks pass | Passed in CI run #72 |
-| Engine smoke test under ASan/UBSan | No sanitizer errors; bundled WAV loads | Passed in CI run #72 |
+| Engine smoke test under ASan/UBSan | No sanitizer errors; bundled WAV loads | Passed in CI run #91; sample-hold retrigger regression pending run #93 |
 | 48 kHz stereo WAV | Loads, preserves independent left/right channels and uses source-rate playback step | Passed |
 | 44.1 kHz mono WAV | Loads and plays at correct host-rate step | Passed |
 | Invalid RIFF size / PCM byte rate | File is rejected | Passed |
@@ -17,6 +17,7 @@ This file separates automated host/build validation, package validation and phys
 | Paula quantisation / cubic interpolation | Bounded quantisation and interpolation endpoint checks | Pending CI |
 | Automatic 16-slice remapping | At least 15 detected attacks produce 16 valid regions; otherwise equal-slice fallback | Pending CI |
 | Resampling selector | Paula Hold / Linear / Cubic parameter round-trip and audible output difference | Passed in CI run #90 |
+| Vintage sample-hold clock | Retriggering a voice does not reset the shared decimator phase | Added; pending CI run #93 |
 | Custom MPC skin | PLAY and CHARACTER pages, Q-Link maps and preview generation | Passed in CI run #90 |
 | PAULA mode | Third mode option compiles and packages with the MPC skin | Passed in CI run #90 |
 | Polyphony | Eight voices overlap; ninth trigger steals a voice safely | Passed |
@@ -69,7 +70,7 @@ Requirements:
 | Audio quality | No hangs, unexpected silence, severe clicks or distortion | Not tested |
 | Pitch / Reverse | Both controls behave correctly during playback | Not tested |
 | Vintage | Bits and Rate Crush respond to controls | Not tested |
-| Presets | All four factory presets load and restore values | Not tested |
+| Presets | All five factory presets load and restore values | Not tested |
 | Project persistence | Save, close, reopen and confirm parameters/preset remain correct | Not tested |
 | CPU / stability | No dropouts during a 10-minute pattern with 8 voices | Not tested |
 | Restart | Plugin remains discoverable and WAV reloads after MPC restart | Not tested |
