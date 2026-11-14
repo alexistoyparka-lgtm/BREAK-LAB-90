@@ -339,6 +339,27 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // Manual slice edits stay inside their original region and support one-step undo.
+    void *slice_edit = api->create(dir);
+    if (!slice_edit) return 1;
+    char boundary_value[32] = {};
+    api->set_param(slice_edit, "slice_start", "0.20");
+    api->set_param(slice_edit, "slice_end", "0.80");
+    if (!api->get_param(slice_edit, "slice_start", boundary_value, sizeof(boundary_value)) ||
+        fabs(atof(boundary_value) - 0.20) > 0.02) {
+        fprintf(stderr, "manual slice start edit failed: %s\\n", boundary_value);
+        api->destroy(slice_edit); return 1;
+    }
+    api->set_param(slice_edit, "slice_start", "0.30");
+    api->set_param(slice_edit, "undo", "1");
+    memset(boundary_value, 0, sizeof(boundary_value));
+    api->get_param(slice_edit, "slice_start", boundary_value, sizeof(boundary_value));
+    if (fabs(atof(boundary_value) - 0.20) > 0.02) {
+        fprintf(stderr, "manual slice undo failed: %s\\n", boundary_value);
+        api->destroy(slice_edit); return 1;
+    }
+    api->destroy(slice_edit);
+
     // Starting a second voice must not reset the shared Vintage sample-hold phase.
     // Both engines begin with the same held sample; retriggering one engine between
     // decimator ticks must not change its next output frame.
