@@ -1,6 +1,6 @@
 # BREAK LAB 90 — candidat de test MPC Live Gen1
 
-**Version de développement : 0.1.5 — candidat au premier test matériel.**
+**Version de développement : 0.2.0-rc1 — candidat de validation ARMv7 et MPC Live Gen1.**
 
 BREAK LAB 90 est un instrument sampler de breaks pour OpenMPC, ciblant la MPC Live de première génération (ARM 32 bits / armhf). MPC OS 3.10 est la version visée.
 
@@ -20,11 +20,12 @@ Le paquet est donc prêt pour un **premier essai contrôlé sur une MPC de test 
 ## Fonctions disponibles
 
 - Lecture d'un break WAV PCM 16 bits, mono ou stéréo.
-- 16 slices égales, déclenchées par MIDI notes 36 à 51.
+- 16 slices MIDI (notes 36 à 51), avec détection de transitoires à l'ouverture du sample quand au moins 15 attaques fiables sont détectées ; sinon, repli sur 16 divisions égales.
 - Note MIDI 60 (C4) : audition de la slice sélectionnée.
 - Pitch de -24 à +24 demi-tons.
 - Lecture Forward / Reverse.
-- Modes Clean et Vintage.
+- Modes Clean et Vintage / Paula-style.
+- Trois modes de lecture : Paula Hold (sans interpolation), Linear et Cubic.
 - Réduction de profondeur de bits et Rate Crush en mode Vintage.
 - Filtre passe-bas et volume général.
 - 8 voix simultanées avec vol de voix en cas de surcharge.
@@ -59,14 +60,14 @@ Voir le guide d'installation et de test MPC Live 1 (docs/MPC_LIVE_1_TEST.md) et 
 ## Limites connues
 
 - Un seul WAV chargé à la fois.
-- Découpage fixe en 16 parts égales.
-- Pas de détection automatique de transitoires.
+- Les points de coupe ne sont pas encore éditables individuellement depuis l'écran.
+- La détection automatique est une première version heuristique, pas encore un détecteur kick/snare spécialisé.
 - Pas de déplacement manuel des points de coupe.
 - Pas de time-stretch indépendant du pitch ni de resampling.
 - Pas encore de benchmark CPU ni de validation réelle sur MPC Live 1.
 
 ## Conclusion
 
-**Le build 0.1.5 est compilé et vérifié côté hôte ; le prochain jalon est le test réel sur MPC Live 1 / OS 3.10.** Le chargement du plugin, l'affichage tactile, les Q-Links, la lecture audio, la sauvegarde/réouverture de projet, le redémarrage et la stabilité 10 minutes restent à confirmer sur la machine physique.
+**La branche 0.2.0-rc1 ajoute le premier slicing transitoire et trois modes d'interpolation. Le build ARMv7 et les tests doivent encore passer avant de proposer un paquet à installer.** Le chargement du plugin, l'affichage tactile, les Q-Links, la lecture audio, la sauvegarde/réouverture de projet, le redémarrage et la stabilité 10 minutes restent à confirmer sur la machine physique.
 
 Le break fourni est original. L'utilisateur est responsable des droits sur les fichiers audio qu'il importe.
