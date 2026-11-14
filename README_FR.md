@@ -25,7 +25,8 @@ Le paquet est donc prêt pour un **premier essai contrôlé sur une MPC de test 
 - Pitch de -24 à +24 demi-tons.
 - Lecture Forward / Reverse.
 - Trois modes : Clean, Vintage et PAULA (lecture sans interpolation, caractère 8-bit / sample-hold).
-- Skin MPC en deux pages : PLAY / SLICE SELECT et CHARACTER / SOUND DESIGN, avec Q-Links dédiés.
+- Skin MPC en trois pages : PLAY / SLICE SELECT, SLICE / MANUAL EDIT et CHARACTER / SOUND DESIGN, avec Q-Links dédiés.
+- Édition manuelle candidate des bornes Start/End de la slice sélectionnée, avec écart minimal protégé et annulation de la dernière modification. Cette évolution attend encore la validation CI et le test physique.
 - Trois modes d'interpolation : Paula Hold (sans interpolation), Linear et Cubic.
 - En mode PAULA, le contrôle Rate utilise un diviseur d'horloge dédié (1 à 6 pas) ; ce modèle est inspiré du comportement Paula, sans prétendre à une émulation cycle-exacte.
 - Réduction de profondeur de bits et Rate Crush en mode Vintage.
