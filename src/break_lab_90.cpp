@@ -26,6 +26,7 @@ struct Engine {
   float lpL=0, lpR=0;
   int heldSlice=0;
   int sliceStart[16]={}; int sliceEnd[16]={};
+  int undoStart[16]={}; int undoEnd[16]={}; bool undoValid=false;
   float interpolation=1;
   int rateCounter=0;
   float heldL=0, heldR=0;
@@ -124,12 +125,44 @@ static void destroy_engine(void*p){delete (Engine*)p;}
 static void midi_engine(void*p,const uint8_t*m,int n){if(!p||!m||n<3)return;Engine*e=(Engine*)p;int st=m[0]&0xf0,note=m[1],vel=m[2];if(st==0x90&&vel>0&&note>=36&&note<=51){int sl=note-36;e->heldSlice=sl;start_voice(e,sl,vel/127.f);}else if(st==0x90&&vel>0&&note==60){int sl=std::max(0,std::min(15,(int)std::round(e->slice)));e->heldSlice=sl;start_voice(e,sl,vel/127.f);}else if((st==0x90&&vel==0)||st==0x80){/* one-shot slices: note-off deliberately does not choke */}}
 static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)return;Engine*e=(Engine*)p;float x=(float)std::atof(v);
 #define SET(name,field,lo,hi) if(!std::strcmp(k,name)){e->field=std::max((float)(lo),std::min((float)(hi),x));return;}
- SET("slice",slice,0,15) SET("interpolation",interpolation,0,2) SET("pitch",pitch,-24,24) SET("reverse",reverse,0,1) SET("mode",mode,0,2) SET("bits",bits,4,16) SET("rate",rate,0,1) SET("cutoff",cutoff,0,1) SET("volume",volume,0,1)
+ SET("slice",slice,0,15)
+ if(!std::strcmp(k,"slice_start")||!std::strcmp(k,"slice_end")){
+   const int total=(int)e->sample.l.size();
+   if(total>0){
+     const int sl=std::max(0,std::min(15,(int)std::round(e->slice)));
+     const int minGap=std::max(8,std::min(128,total/32));
+     const int oldStart=e->sliceStart[sl], oldEnd=e->sliceEnd[sl];
+     int frame=(int)std::round(std::max(0.f,std::min(1.f,x))*(total-1));
+     if(!std::strcmp(k,"slice_start")){
+       const int lower=sl?e->sliceEnd[sl-1]+minGap:0;
+       const int upper=e->sliceEnd[sl]-minGap;
+       frame=std::max(lower,std::min(upper,frame));
+       if(frame!=oldStart){e->undoStart[sl]=oldStart;e->undoEnd[sl]=oldEnd;e->undoValid=true;e->sliceStart[sl]=frame;}
+     } else {
+       const int lower=e->sliceStart[sl]+minGap;
+       const int upper=sl<15?e->sliceStart[sl+1]-minGap:total;
+       frame=std::max(lower,std::min(upper,frame));
+       if(frame!=oldEnd){e->undoStart[sl]=oldStart;e->undoEnd[sl]=oldEnd;e->undoValid=true;e->sliceEnd[sl]=frame;}
+     }
+   }
+   return;
+ }
+ if(!std::strcmp(k,"undo")){if(x>.5f&&e->undoValid){const int sl=std::max(0,std::min(15,(int)std::round(e->slice)));e->sliceStart[sl]=e->undoStart[sl];e->sliceEnd[sl]=e->undoEnd[sl];e->undoValid=false;}return;}
+ SET("interpolation",interpolation,0,2) SET("pitch",pitch,-24,24) SET("reverse",reverse,0,1) SET("mode",mode,0,2) SET("bits",bits,4,16) SET("rate",rate,0,1) SET("cutoff",cutoff,0,1) SET("volume",volume,0,1)
 #undef SET
 }
 static int get_param_engine(void*p,const char*k,char*b,int n){if(!p||!k||!b||n<2)return 0;Engine*e=(Engine*)p;float x=0;
 #define GET(name,field) if(!std::strcmp(k,name)){x=e->field;std::snprintf(b,n,"%.3f",x);return 1;}
- GET("slice",slice) GET("interpolation",interpolation) GET("pitch",pitch) GET("reverse",reverse) GET("mode",mode) GET("bits",bits) GET("rate",rate) GET("cutoff",cutoff) GET("volume",volume)
+ GET("slice",slice)
+ if(!std::strcmp(k,"slice_start")||!std::strcmp(k,"slice_end")){
+   const int total=(int)e->sample.l.size();
+   const int sl=std::max(0,std::min(15,(int)std::round(e->slice)));
+   const int frame=!std::strcmp(k,"slice_start")?e->sliceStart[sl]:e->sliceEnd[sl];
+   x=total>1?(float)frame/(float)(total-1):0.f;
+   std::snprintf(b,n,"%.5f",x);return 1;
+ }
+ if(!std::strcmp(k,"undo")){std::snprintf(b,n,"0");return 1;}
+ GET("interpolation",interpolation) GET("pitch",pitch) GET("reverse",reverse) GET("mode",mode) GET("bits",bits) GET("rate",rate) GET("cutoff",cutoff) GET("volume",volume)
 #undef GET
  if(!std::strcmp(k,"status")){std::snprintf(b,n,"%s",e->status.c_str());return 1;}return 0;}
 static void render_engine(void *p, int16_t *out, int frames) {
