@@ -26,7 +26,8 @@ Le paquet est donc prêt pour un **premier essai contrôlé sur une MPC de test 
 - Lecture Forward / Reverse.
 - Trois modes : Clean, Vintage et PAULA (lecture sans interpolation, caractère 8-bit / sample-hold).
 - Skin MPC en deux pages : PLAY / SLICE SELECT et CHARACTER / SOUND DESIGN, avec Q-Links dédiés.
-- Trois modes de lecture : Paula Hold (sans interpolation), Linear et Cubic.
+- Trois modes d'interpolation : Paula Hold (sans interpolation), Linear et Cubic.
+- En mode PAULA, le contrôle Rate utilise un diviseur d'horloge dédié (1 à 6 pas) ; ce modèle est inspiré du comportement Paula, sans prétendre à une émulation cycle-exacte.
 - Réduction de profondeur de bits et Rate Crush en mode Vintage.
 - Filtre passe-bas et volume général.
 - 8 voix simultanées avec vol de voix en cas de surcharge.
@@ -69,6 +70,6 @@ Voir le guide d'installation et de test MPC Live 1 (docs/MPC_LIVE_1_TEST.md) et 
 
 ## Conclusion
 
-**La branche 0.2.0-rc1 ajoute le slicing transitoire, la skin dédiée et trois modes d'interpolation. Le build #91 est validé côté CI ; le correctif sample-hold du run #93 doit encore passer. L'essai matériel reste indispensable.** Le chargement du plugin, l'affichage tactile, les Q-Links, la lecture audio, la sauvegarde/réouverture de projet, le redémarrage et la stabilité 10 minutes restent à confirmer sur la machine physique.
+**La branche 0.2.0-rc1 ajoute le slicing transitoire, la skin dédiée et trois modes d'interpolation. Le build #91 est validé côté CI ; les correctifs de phase sample-hold, de diviseur PAULA et de métadonnées de version sont en cours de validation CI (runs #93, #95 et #96). L'essai matériel reste indispensable.** Le chargement du plugin, l'affichage tactile, les Q-Links, la lecture audio, la sauvegarde/réouverture de projet, le redémarrage et la stabilité 10 minutes restent à confirmer sur la machine physique.
 
 Le break fourni est original. L'utilisateur est responsable des droits sur les fichiers audio qu'il importe.
