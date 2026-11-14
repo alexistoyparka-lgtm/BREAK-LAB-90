@@ -28,7 +28,7 @@ CI STATUS
 - Physical MPC Live Gen1 acceptance remains outstanding.
 
 NEXT DEVELOPMENT PHASES
-1. Editable slice boundaries with safe per-slice state and undo.
+1. Manual Start/End controls and one-step undo have now been implemented on the development branch; CI run #105 is pending. Next: validate on MPC and improve boundary workflow.
 2. Improved transient analysis: multi-band energy flux, sensitivity and minimum-gap controls.
 3. Safe sample asset handoff and multiple sample slots/banks.
 4. Additional WAV decoding formats with strict memory limits.
