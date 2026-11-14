@@ -12,7 +12,11 @@ This file separates automated host/build validation, package validation and phys
 | 48 kHz stereo WAV | Loads, preserves independent left/right channels and uses source-rate playback step | Passed |
 | 44.1 kHz mono WAV | Loads and plays at correct host-rate step | Passed |
 | Invalid RIFF size / PCM byte rate | File is rejected | Passed |
-| 16 MIDI slices | Notes 36–51 each produce audio | Passed |
+| 16 MIDI slices | Notes 36–51 each produce audio | Passed on previous baseline; rerun required for 0.2.0-rc1 |
+| Transient detector | Synthetic attack fixture returns ordered attack candidates | Pending CI |
+| Paula quantisation / cubic interpolation | Bounded quantisation and interpolation endpoint checks | Pending CI |
+| Automatic 16-slice remapping | At least 15 detected attacks produce 16 valid regions; otherwise equal-slice fallback | Pending CI |
+| Resampling selector | Paula Hold / Linear / Cubic parameter round-trip and audible output difference | Pending CI |
 | Polyphony | Eight voices overlap; ninth trigger steals a voice safely | Passed |
 | Selected slice audition | MIDI note 60 plays selected slice | Passed |
 | Filter / master volume | Controls alter rendered signal | Passed |
@@ -78,4 +82,4 @@ Do not call this a finished or hardware-certified plugin until:
 4. Skin, Q-Links, audio, MIDI, presets and save/reload pass.
 5. Restart and 10-minute stability checks pass.
 
-The current 0.1.5 build is a controlled-test candidate, not a production release.
+The 0.2.0-rc1 branch is an experimental candidate, not a production release. The previous 0.1.5 baseline remains the rollback reference.
