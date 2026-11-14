@@ -70,6 +70,6 @@ Voir le guide d'installation et de test MPC Live 1 (docs/MPC_LIVE_1_TEST.md) et 
 
 ## Conclusion
 
-**La branche 0.2.0-rc1 ajoute le slicing transitoire, la skin dédiée et trois modes d'interpolation. Le build #91 est validé côté CI ; les correctifs de phase sample-hold, de diviseur PAULA et de métadonnées de version sont en cours de validation CI (runs #93, #95 et #96). L'essai matériel reste indispensable.** Le chargement du plugin, l'affichage tactile, les Q-Links, la lecture audio, la sauvegarde/réouverture de projet, le redémarrage et la stabilité 10 minutes restent à confirmer sur la machine physique.
+**La branche 0.2.0-rc1 ajoute le slicing transitoire, la skin dédiée et trois modes d'interpolation. Le build #91 est validé côté CI ; les correctifs de phase sample-hold, de diviseur PAULA et de métadonnées de version ont passé le build ARMv7 et les tests hôtes dans le run **#96**. L'essai matériel reste indispensable. L'essai matériel reste indispensable.** Le chargement du plugin, l'affichage tactile, les Q-Links, la lecture audio, la sauvegarde/réouverture de projet, le redémarrage et la stabilité 10 minutes restent à confirmer sur la machine physique.
 
 Le break fourni est original. L'utilisateur est responsable des droits sur les fichiers audio qu'il importe.
