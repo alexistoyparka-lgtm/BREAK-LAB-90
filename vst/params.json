@@ -31,7 +31,8 @@
       "name": "Mode",
       "options": [
         "Clean",
-        "Vintage"
+        "Vintage",
+        "PAULA"
       ],
       "default": 0
     },
