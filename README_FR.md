@@ -45,6 +45,17 @@ Formats acceptés : WAV RIFF, PCM linéaire 16 bits, mono ou stéréo, 8 à 192 
 
 Pour remplacer le break, sauvegarder le WAV fourni puis remplacer break01.wav par son propre fichier portant exactement ce nom. Il faut ensuite fermer et rouvrir le plugin. Il n'existe pas encore de navigateur/import WAV à l'écran.
 
+## Installation sans SSH direct (Plugin Manager OpenMPC)
+
+Sur MPC OS 3.10.x, ne pas compter sur l'ancien lancement automatique de scripts USB : ce mécanisme a été retiré par Akai à partir de 3.10. Pour installer ce ZIP sans saisir de commandes SSH sur l'ordinateur, utiliser l'OpenMPC Plugin Manager VST en version **0.2.3 ou ultérieure**, qui prend en charge les ZIP locaux :
+
+1. Copier le fichier `BREAK-LAB-90-0.2.0-mpc-armv7.zip` dans un dossier `local-plugins` placé à côté du dossier `Synths` du même volume (par exemple, si le volume USB contient `Synths/`, créer `local-plugins/` à sa racine).
+2. Brancher le volume sur la MPC et ouvrir **OpenMPC Plugin Manager** sur une piste instrument.
+3. Dans l'onglet Discover, repérer la carte marquée **by local zip**, puis choisir INSTALL.
+4. Appuyer sur APPLY et confirmer le redémarrage de MPC après avoir sauvegardé le projet.
+
+Cette méthode exige que le Plugin Manager soit déjà installé et que le volume contenant `local-plugins/` soit un emplacement de contenu MPC valide. Le ZIP n'apparaît pas spontanément dans le navigateur d'instruments : le Manager doit d'abord l'installer et l'enregistrer dans `MPC.settings`. Sur une MPC OS 3.10.x, l'ancien script USB automatique ne peut pas effectuer cette étape.
+
 ## Installation
 
 L'installation est non officielle et nécessite un accès shell **root** à la MPC. Le script :
