@@ -10,31 +10,6 @@
       "default": 0
     },
     {
-      "key": "slice_start",
-      "name": "Slice Start",
-      "type": "float",
-      "min": 0,
-      "max": 1,
-      "default": 0
-    },
-    {
-      "key": "slice_end",
-      "name": "Slice End",
-      "type": "float",
-      "min": 0,
-      "max": 1,
-      "default": 1
-    },
-    {
-      "key": "undo",
-      "name": "Undo Slice Edit",
-      "options": [
-        "Ready",
-        "Undo"
-      ],
-      "default": 0
-    },
-    {
       "key": "pitch",
       "name": "Pitch",
       "type": "float",
@@ -112,6 +87,31 @@
         "Cubic"
       ],
       "default": 1
+    },
+    {
+      "key": "slice_start",
+      "name": "Slice Start",
+      "type": "float",
+      "min": 0,
+      "max": 1,
+      "default": 0
+    },
+    {
+      "key": "slice_end",
+      "name": "Slice End",
+      "type": "float",
+      "min": 0,
+      "max": 1,
+      "default": 1
+    },
+    {
+      "key": "undo",
+      "name": "Undo Slice Edit",
+      "options": [
+        "Ready",
+        "Undo"
+      ],
+      "default": 0
     }
   ],
   "sections": [
