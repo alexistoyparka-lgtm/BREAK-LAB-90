@@ -1,87 +1,71 @@
-# BREAK LAB 90 — candidat de test MPC Live Gen1
+# BREAK LAB 90 — sampler Amiga pour MPC Live Gen1
 
-**Version de développement : 0.2.0-rc1 — candidat de validation ARMv7 et MPC Live Gen1.**
+**Version 0.2.1 : candidat USB ARMv7/armhf pour MPC OS3.10.1.**
 
-BREAK LAB 90 est un instrument sampler de breaks pour OpenMPC, ciblant la MPC Live de première génération (ARM 32 bits / armhf). MPC OS 3.10 est la version visée.
+La version 0.2.0 USB du build 107 a été ouverte sur la MPC physique de l'utilisateur
+et produit du son. L'ordre des pads de sa piste chromatique nécessitait une
+correction. La0.2.1 ajoute le calibrage des pads, dix breaks et une nouvelle skin ;
+cette nouvelle version attend encore son essai matériel.
 
-## État de validation
+## Installer et jouer
 
-- Compilation ARMv7 / armhf : réussie dans GitHub Actions, run **#91** (build de référence ; nouveau correctif en cours de validation dans le run #93).
-- Tests du wrapper OpenMPC : réussis dans le run #91.
-- Tests moteur WAV/MIDI/audio sous ASan + UBSan : réussis dans le run #91 ; le run #93 ajoute un test de non-réinitialisation de l'horloge sample-hold.
-- Paquet généré : ZIP MPC ARMv7, binaire ELF32 ARM hard-float.
-- Contrôles du paquet : sommes SHA-256 valides, scripts installateur/désinstallateur syntaxiquement valides.
-- Essai à blanc de l'installation puis de la désinstallation avec un faux MPC.settings : réussi.
-- Interface : aperçu de la skin générée inspecté.
-- MPC Live 1 physique / OS 3.10 : **pas encore testé**.
+Télécharger l'artefact `break-lab-90-v0.2.1-usb-candidate` d'un build GitHub Actions
+réussi. Extraire ensuite **BREAK-LAB-90-0.2.1-mpc-sdk.zip**, puis copier son unique
+dossier dans `VST2 Plugins` à la racine de la clé USB.
 
-Le paquet est donc prêt pour un **premier essai contrôlé sur une MPC de test sauvegardée**. Cela ne constitue pas une certification matérielle et il ne faut pas l'utiliser sur une MPC contenant un projet important sans sauvegarde complète.
+Conserver l'ancien dossier fonctionnel en sauvegarde hors de VST2 Plugins.
+Ne pas fusionner les versions. La copie USB n'exécute aucun script et ne nécessite
+aucune modification manuelle de MPC.settings.
 
-## Fonctions disponibles
+- [Procédure USB détaillée et retour arrière](docs/INSTALL_USB_FR.md)
+- [Calibrage des pads, banque de breaks et essai0.2.1](docs/PADS_BANK_RETRO_FR.md)
+- [Audit du problème de détection0.2.0](docs/USB_PACKAGING_AUDIT.md)
 
-- Lecture d'un break WAV PCM 16 bits, mono ou stéréo.
-- 16 slices MIDI (notes 36 à 51), avec détection de transitoires à l'ouverture du sample quand au moins 15 attaques fiables sont détectées ; sinon, repli sur 16 divisions égales.
-- Note MIDI 60 (C4) : audition de la slice sélectionnée.
-- Pitch de -24 à +24 demi-tons.
-- Lecture Forward / Reverse.
-- Trois modes : Clean, Vintage et PAULA (lecture sans interpolation, caractère 8-bit / sample-hold).
-- Skin MPC en trois pages : PLAY / SLICE SELECT, SLICE / MANUAL EDIT et CHARACTER / SOUND DESIGN, avec Q-Links dédiés.
-- Édition manuelle candidate des bornes Start/End de la slice sélectionnée, avec écart minimal protégé et annulation de la dernière modification. Cette évolution attend encore la validation CI et le test physique.
-- Trois modes d'interpolation : Paula Hold (sans interpolation), Linear et Cubic.
-- En mode PAULA, le contrôle Rate utilise un diviseur d'horloge dédié (1 à 6 pas) ; ce modèle est inspiré du comportement Paula, sans prétendre à une émulation cycle-exacte.
-- Réduction de profondeur de bits et Rate Crush en mode Vintage.
+## Pads dans l'ordre
+
+Sur la page **PADS**, appuyer sur **LEARN PAD 1 + 5**, puis frapper le pad 1 physique
+(en bas à gauche) et le pad 5 (juste au-dessus). Garder la piste MPC en Chromatic.
+Le plugin apprend la note de départ et l'écart des rangées. Les slices suivent
+alors1–4 en bas, 5–8, 9–12, 13–16 en haut, de gauche à droite.
+
+Le mode Legacy 36–51 reste disponible pour les anciennes séquences MIDI.
+Les réglages de pads sont conservés quand on change de preset.
+
+## Dix breaks supplémentaires
+
+Les cinq presets historiques gardent leurs positions : Clean Break, Dusty12-Bit,
+Dark Warehouse, Reverse Texture et Paula Jungle. Les dix nouveaux presets chargent
+Warehouse Run, Chrome Break, Redline Break, Neon Shuffle, Dust Circuit, Razor Step,
+Basement Snap, Ghost Runner, Concrete Swing et Subway Funk.
+
+Le sélecteur SAMPLE MEMORY change le break sans remplacer les réglages de son.
+Les noms sont créatifs ; les sources et empreintes sont dans `engine/breaks/bank.json`.
+Les WAV stéréo44,1 kHz/16 bits ont été renommés sans modifier leurs données.
+Les onze fichiers et leurs découpages sont préparés au chargement, sous un budget
+combiné de64 Mio décodés. Aucun accès disque n'est effectué au changement de break.
+
+## Moteur et interface
+
+- 16 slices,8 voix, vélocité, pitch±24 demi-tons, reverse et fondus anti-clic.
+- Détection heuristique des transitoires, avec repli sur16 divisions égales.
+- Édition START/END protégée et Undo d'une modification.
+- CLEAN, VINTAGE et PAULA, quantification et sample-and-hold.
+- Paula Hold, Linear et Cubic ; PAULA reste une approximation créative.
 - Filtre passe-bas et volume général.
-- 8 voix simultanées avec vol de voix en cas de surcharge.
-- Cinq presets : Clean Break, Dusty 12-Bit, Dark Warehouse, Reverse Texture et Paula Jungle.
-- Un break original est fourni.
+- Quatre pages tactiles PLAY, SLICE, CHARACTER et PADS avec Q-Links.
+- Châssis graphite/gris, typographie rétro et waveform rouge du fichier sélectionné.
+- Sauvegarde d'état versionnée du break, des réglages, du calibrage et des bornes.
 
-## Format audio
+Les waveforms sont des aperçus statiques des vrais fichiers, sans tête de lecture
+animée ni édition tactile directe. Le chargement libre de WAV depuis l'écran,
+le time-stretch et le resampling interne ne sont pas encore implémentés.
 
-Le fichier chargé au démarrage est :
+## Validation
 
-    engine/breaks/break01.wav
+Les tests portent sur le moteur et le wrapper sous ASan/UBSan, l'ordre audio des
+16 slices, le calibrage et ses erreurs, les changements de samples en RAM, la
+restauration d'état, les fichiers de banque et les deux formats de ZIP.
 
-Formats acceptés : WAV RIFF, PCM linéaire 16 bits, mono ou stéréo, 8 à 192 kHz. 44,1 kHz est recommandé. La mémoire audio décodée est limitée à environ 64 Mio.
-
-Pour remplacer le break, sauvegarder le WAV fourni puis remplacer break01.wav par son propre fichier portant exactement ce nom. Il faut ensuite fermer et rouvrir le plugin. Il n'existe pas encore de navigateur/import WAV à l'écran.
-
-## Installation sans SSH direct (Plugin Manager OpenMPC)
-
-Sur MPC OS 3.10.x, ne pas compter sur l'ancien lancement automatique de scripts USB : ce mécanisme a été retiré par Akai à partir de 3.10. Pour installer ce ZIP sans saisir de commandes SSH sur l'ordinateur, utiliser l'OpenMPC Plugin Manager VST en version **0.2.3 ou ultérieure**, qui prend en charge les ZIP locaux :
-
-1. Copier le fichier `BREAK-LAB-90-0.2.0-mpc-armv7.zip` dans un dossier `local-plugins` placé à côté du dossier `Synths` du même volume (par exemple, si le volume USB contient `Synths/`, créer `local-plugins/` à sa racine).
-2. Brancher le volume sur la MPC et ouvrir **OpenMPC Plugin Manager** sur une piste instrument.
-3. Dans l'onglet Discover, repérer la carte marquée **by local zip**, puis choisir INSTALL.
-4. Appuyer sur APPLY et confirmer le redémarrage de MPC après avoir sauvegardé le projet.
-
-Cette méthode exige que le Plugin Manager soit déjà installé et que le volume contenant `local-plugins/` soit un emplacement de contenu MPC valide. Le ZIP n'apparaît pas spontanément dans le navigateur d'instruments : le Manager doit d'abord l'installer et l'enregistrer dans `MPC.settings`. Sur une MPC OS 3.10.x, l'ancien script USB automatique ne peut pas effectuer cette étape.
-
-## Installation
-
-L'installation est non officielle et nécessite un accès shell **root** à la MPC. Le script :
-
-1. vérifie l'architecture et les fichiers du paquet ;
-2. demande confirmation et arrête MPC ;
-3. sauvegarde MPC.settings ;
-4. installe le dossier complet du plugin sous /sdcard/Synths ;
-5. ajoute l'entrée du plugin à la liste MPC ;
-6. redémarre MPC.
-
-Faire une sauvegarde de MPC.settings, des projets importants et de tout dossier plugin existant avant l'installation. Ne jamais interrompre le script pendant la modification des fichiers. La désinstallation est fournie et conserve le dossier de données utilisateur.
-
-Voir le guide d'installation et de test MPC Live 1 (docs/MPC_LIVE_1_TEST.md) et la checklist de validation (TESTING.md).
-
-## Limites connues
-
-- Un seul WAV chargé à la fois.
-- Les points de coupe ne sont pas encore éditables individuellement depuis l'écran.
-- La détection automatique est une première version heuristique, pas encore un détecteur kick/snare spécialisé.
-- Pas de déplacement manuel des points de coupe.
-- Pas de time-stretch indépendant du pitch ni de resampling.
-- Pas encore de benchmark CPU ni de validation réelle sur MPC Live 1.
-
-## Conclusion
-
-**La branche 0.2.0-rc1 ajoute le slicing transitoire, la skin dédiée et trois modes d'interpolation. Le build #91 est validé côté CI ; les correctifs de phase sample-hold, de diviseur PAULA et de métadonnées de version ont passé le build ARMv7 et les tests hôtes dans le run **#96**. L'essai matériel reste indispensable. L'essai matériel reste indispensable.** Le chargement du plugin, l'affichage tactile, les Q-Links, la lecture audio, la sauvegarde/réouverture de projet, le redémarrage et la stabilité 10 minutes restent à confirmer sur la machine physique.
-
-Le break fourni est original. L'utilisateur est responsable des droits sur les fichiers audio qu'il importe.
+L'UID VST reste `42726b39`, les paramètres historiques ne sont pas réordonnés.
+La compilation ARMv7 et les tests logiciels ne remplacent pas la validation de
+la 0.2.1 sur MPC Live Gen1. CPU, longues sessions et persistance MPC restent à mesurer.

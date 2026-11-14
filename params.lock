@@ -8,3 +8,12 @@ cutoff
 volume
 status
 interpolation
+slice_start
+slice_end
+undo
+pad_layout
+pad_root
+pad_stride
+pad_learn
+midi_note
+break_select
