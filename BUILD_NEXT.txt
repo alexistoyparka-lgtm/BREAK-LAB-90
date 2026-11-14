@@ -24,7 +24,7 @@ RECENT ENGINE WORK
 
 CI STATUS
 - Baseline run #91 passed ARMv7 build, wrapper tests, engine tests, skin generation and package creation.
-- Runs #93, #95 and #96 are validating the latest engine/test/version changes. Do not mark them passed until GitHub Actions reports success and inspect their artifacts.
+- Run #96 passed ARMv7 build, wrapper tests, ASan/UBSan engine tests, packaging and artifact upload. The artifact was downloaded; outer ZIP integrity, inner SHA256SUMS and ELF32 ARM EABI5 hard-float were verified. Physical MPC acceptance is still outstanding.
 - Physical MPC Live Gen1 acceptance remains outstanding.
 
 NEXT DEVELOPMENT PHASES
