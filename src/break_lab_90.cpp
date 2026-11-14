@@ -26,6 +26,7 @@ struct Engine {
   float lpL=0, lpR=0;
   int heldSlice=0;
   int sliceStart[16]={}; int sliceEnd[16]={};
+  int baseStart[16]={}; int baseEnd[16]={};
   int undoStart[16]={}; int undoEnd[16]={}; bool undoValid=false;
   float interpolation=1;
   int rateCounter=0;
@@ -118,6 +119,7 @@ static void* create_engine(const char* data_dir){
         else for(int i=0;i<16;i++){e->sliceStart[i]=(int)((long long)total*i/16);e->sliceEnd[i]=(int)((long long)total*(i+1)/16);}
       }
     }
+    for(int i=0;i<16;i++){e->baseStart[i]=e->sliceStart[i];e->baseEnd[i]=e->sliceEnd[i];}
   }
   return e;
 }
@@ -132,7 +134,9 @@ static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)ret
      const int sl=std::max(0,std::min(15,(int)std::round(e->slice)));
      const int minGap=std::max(8,std::min(128,total/32));
      const int oldStart=e->sliceStart[sl], oldEnd=e->sliceEnd[sl];
-     int frame=(int)std::round(std::max(0.f,std::min(1.f,x))*(total-1));
+     const float norm=std::max(0.f,std::min(1.f,x));
+     const int baseA=e->baseStart[sl], baseB=e->baseEnd[sl];
+     int frame=baseA+(int)std::round(norm*std::max(0,baseB-baseA));
      if(!std::strcmp(k,"slice_start")){
        const int lower=sl?e->sliceEnd[sl-1]+minGap:0;
        const int upper=e->sliceEnd[sl]-minGap;
@@ -158,7 +162,8 @@ static int get_param_engine(void*p,const char*k,char*b,int n){if(!p||!k||!b||n<2
    const int total=(int)e->sample.l.size();
    const int sl=std::max(0,std::min(15,(int)std::round(e->slice)));
    const int frame=!std::strcmp(k,"slice_start")?e->sliceStart[sl]:e->sliceEnd[sl];
-   x=total>1?(float)frame/(float)(total-1):0.f;
+   const int baseA=e->baseStart[sl], baseB=e->baseEnd[sl];
+   x=baseB>baseA?(float)(frame-baseA)/(float)(baseB-baseA):0.f;
    std::snprintf(b,n,"%.5f",x);return 1;
  }
  if(!std::strcmp(k,"undo")){std::snprintf(b,n,"0");return 1;}
