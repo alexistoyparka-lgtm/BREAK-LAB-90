@@ -98,10 +98,10 @@ static void* create_engine(const char* data_dir){
       const int total=(int)e->sample.l.size();
       for(int i=0;i<16;i++){e->sliceStart[i]=(int)((long long)total*i/16);e->sliceEnd[i]=(int)((long long)total*(i+1)/16);}
       // Analyze off the audio thread and map detected attacks to 16 playable regions.
-      std::vector<float> mono(total);
-      for(int i=0;i<total;i++) mono[i]=0.5f*(e->sample.l[i]+e->sample.r[i]);
       bl90::Onset onsets[64];
-      const int found=bl90::detect_onsets(mono.data(),total,e->sample.sampleRate,0.55f,24,onsets,64);
+      // Use the left channel as the analysis source to avoid a second full-size
+      // allocation on the memory-constrained MPC Live Gen1.
+      const int found=bl90::detect_onsets(e->sample.l.data(),total,e->sample.sampleRate,0.55f,24,onsets,64);
       if(found>=15){
         int prev=0; bool valid=true;
         for(int i=1;i<16;i++){
