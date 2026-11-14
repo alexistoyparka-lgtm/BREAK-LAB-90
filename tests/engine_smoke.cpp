@@ -2,6 +2,7 @@ extern "C" {
 #include "engine.h"
 }
 #include <stdint.h>
+#include <cmath>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
