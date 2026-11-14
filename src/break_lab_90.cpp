@@ -139,7 +139,11 @@ static void render_engine(void *p, int16_t *out, int frames) {
   const float cutoffHz = 150.0f + e->cutoff * 18000.0f;
   const float alpha = 1.0f - std::exp(-2.0f * (float)PI * cutoffHz / 44100.0f);
   const int bits = (int)std::round(e->bits);
-  const int hold = e->mode > .5f ? 1 + (int)(e->rate * 23.0f) : 1;
+  // Vintage keeps the wider 1..24-step rate-crush range. PAULA uses a
+  // narrower 1..6 divider range, approximating a controllable Paula-style
+  // playback clock without pretending to be cycle-accurate hardware emulation.
+  const int hold = e->mode > 1.5f ? 1 + (int)std::round(e->rate * 5.0f)
+                 : e->mode > .5f ? 1 + (int)(e->rate * 23.0f) : 1;
   const double pitchStep = std::pow(2.0, e->pitch / 12.0) * (e->sample.sampleRate / 44100.0);
 
   for (int i = 0; i < frames; ++i) {
