@@ -117,7 +117,7 @@ static void* create_engine(const char* data_dir){
           e->sliceEnd[i-1].store(boundary); e->sliceStart[i].store(boundary); prev=boundary;
         }
         if(valid){e->sliceStart[0].store(0);e->sliceEnd[15].store(total);}
-        else for(int i=0;i<16;i++){e->sliceStart[i]=(int)((long long)total*i/16);e->sliceEnd[i]=(int)((long long)total*(i+1)/16);}
+        else for(int i=0;i<16;i++){e->sliceStart[i].store((int)((long long)total*i/16));e->sliceEnd[i].store((int)((long long)total*(i+1)/16));}
       }
     }
     for(int i=0;i<16;i++){e->baseStart[i]=e->sliceStart[i].load();e->baseEnd[i]=e->sliceEnd[i].load();}
@@ -139,13 +139,13 @@ static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)ret
      const int baseA=e->baseStart[sl], baseB=e->baseEnd[sl];
      int frame=baseA+(int)std::round(norm*std::max(0,baseB-baseA));
      if(!std::strcmp(k,"slice_start")){
-       const int lower=sl?e->sliceEnd[sl-1]+minGap:0;
-       const int upper=e->sliceEnd[sl]-minGap;
+       const int lower=sl?e->sliceEnd[sl-1].load()+minGap:0;
+       const int upper=e->sliceEnd[sl].load()-minGap;
        frame=std::max(lower,std::min(upper,frame));
        if(frame!=oldStart){e->undoStart[sl]=oldStart;e->undoEnd[sl]=oldEnd;e->undoSlice=sl;e->undoValid=true;e->sliceStart[sl].store(frame);}
      } else {
-       const int lower=e->sliceStart[sl]+minGap;
-       const int upper=sl<15?e->sliceStart[sl+1]-minGap:total;
+       const int lower=e->sliceStart[sl].load()+minGap;
+       const int upper=sl<15?e->sliceStart[sl+1].load()-minGap:total;
        frame=std::max(lower,std::min(upper,frame));
        if(frame!=oldEnd){e->undoStart[sl]=oldStart;e->undoEnd[sl]=oldEnd;e->undoValid=true;e->sliceEnd[sl].store(frame);}
      }
