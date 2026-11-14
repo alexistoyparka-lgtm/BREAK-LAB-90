@@ -6,9 +6,9 @@ BREAK LAB 90 est un instrument sampler de breaks pour OpenMPC, ciblant la MPC Li
 
 ## État de validation
 
-- Compilation ARMv7 / armhf : réussie dans GitHub Actions, run **#72**.
-- Tests du wrapper OpenMPC : réussis dans le run #72.
-- Tests moteur WAV/MIDI/audio sous ASan + UBSan : réussis dans le run #72.
+- Compilation ARMv7 / armhf : réussie dans GitHub Actions, run **#91** (build de référence ; nouveau correctif en cours de validation dans le run #93).
+- Tests du wrapper OpenMPC : réussis dans le run #91.
+- Tests moteur WAV/MIDI/audio sous ASan + UBSan : réussis dans le run #91 ; le run #93 ajoute un test de non-réinitialisation de l'horloge sample-hold.
 - Paquet généré : ZIP MPC ARMv7, binaire ELF32 ARM hard-float.
 - Contrôles du paquet : sommes SHA-256 valides, scripts installateur/désinstallateur syntaxiquement valides.
 - Essai à blanc de l'installation puis de la désinstallation avec un faux MPC.settings : réussi.
@@ -69,6 +69,6 @@ Voir le guide d'installation et de test MPC Live 1 (docs/MPC_LIVE_1_TEST.md) et 
 
 ## Conclusion
 
-**La branche 0.2.0-rc1 ajoute le premier slicing transitoire et trois modes d'interpolation. Le build ARMv7 et les tests doivent encore passer avant de proposer un paquet à installer.** Le chargement du plugin, l'affichage tactile, les Q-Links, la lecture audio, la sauvegarde/réouverture de projet, le redémarrage et la stabilité 10 minutes restent à confirmer sur la machine physique.
+**La branche 0.2.0-rc1 ajoute le slicing transitoire, la skin dédiée et trois modes d'interpolation. Le build #91 est validé côté CI ; le correctif sample-hold du run #93 doit encore passer. L'essai matériel reste indispensable.** Le chargement du plugin, l'affichage tactile, les Q-Links, la lecture audio, la sauvegarde/réouverture de projet, le redémarrage et la stabilité 10 minutes restent à confirmer sur la machine physique.
 
 Le break fourni est original. L'utilisateur est responsable des droits sur les fichiers audio qu'il importe.
