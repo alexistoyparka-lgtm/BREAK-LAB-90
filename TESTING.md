@@ -18,6 +18,7 @@ This file separates automated host/build validation, package validation and phys
 | Automatic 16-slice remapping | At least 15 detected attacks produce 16 valid regions; otherwise equal-slice fallback | Pending CI |
 | Resampling selector | Paula Hold / Linear / Cubic parameter round-trip and audible output difference | Passed in CI run #90 |
 | Vintage sample-hold clock | Retriggering a voice does not reset the shared decimator phase | Added; pending CI run #93 |
+| PAULA clock divider | PAULA Rate uses its dedicated 1..6 playback divider and changes rendered output | Added; pending CI run #95 |
 | Custom MPC skin | PLAY and CHARACTER pages, Q-Link maps and preview generation | Passed in CI run #90 |
 | PAULA mode | Third mode option compiles and packages with the MPC skin | Passed in CI run #90 |
 | Polyphony | Eight voices overlap; ninth trigger steals a voice safely | Passed |
