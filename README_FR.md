@@ -25,11 +25,12 @@ Le paquet est donc prêt pour un **premier essai contrôlé sur une MPC de test 
 - Pitch de -24 à +24 demi-tons.
 - Lecture Forward / Reverse.
 - Trois modes : Clean, Vintage et PAULA (lecture sans interpolation, caractère 8-bit / sample-hold).
+- Skin MPC en deux pages : PLAY / SLICE SELECT et CHARACTER / SOUND DESIGN, avec Q-Links dédiés.
 - Trois modes de lecture : Paula Hold (sans interpolation), Linear et Cubic.
 - Réduction de profondeur de bits et Rate Crush en mode Vintage.
 - Filtre passe-bas et volume général.
 - 8 voix simultanées avec vol de voix en cas de surcharge.
-- Quatre presets : Clean Break, Dusty 12-Bit, Dark Warehouse et Reverse Texture.
+- Cinq presets : Clean Break, Dusty 12-Bit, Dark Warehouse, Reverse Texture et Paula Jungle.
 - Un break original est fourni.
 
 ## Format audio
