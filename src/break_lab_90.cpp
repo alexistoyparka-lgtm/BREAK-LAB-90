@@ -13,6 +13,7 @@ extern "C" {
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <atomic>
 
 namespace {
 constexpr double PI = 3.14159265358979323846;
@@ -25,7 +26,7 @@ struct Engine {
   float slice=0, pitch=0, reverse=0, mode=0, bits=16, rate=0, cutoff=1, volume=.85f;
   float lpL=0, lpR=0;
   int heldSlice=0;
-  int sliceStart[16]={}; int sliceEnd[16]={};
+  std::atomic<int> sliceStart[16]; std::atomic<int> sliceEnd[16];
   int baseStart[16]={}; int baseEnd[16]={};
   int undoStart[16]={}; int undoEnd[16]={}; int undoSlice=0; bool undoValid=false;
   float interpolation=1;
@@ -81,7 +82,7 @@ static bool load_wav(const char* path, Sample& s) {
 static void start_voice(Engine*e,int sl,float vel){
   if(e->sample.l.empty()) return;
   sl=std::max(0,std::min(15,sl));
-  int total=(int)e->sample.l.size(), a=e->sliceStart[sl], b=e->sliceEnd[sl];
+  int total=(int)e->sample.l.size(), a=e->sliceStart[sl].load(), b=e->sliceEnd[sl].load();
   if(b-a<2)return;
   int slot=-1;for(int i=0;i<8;i++)if(!e->voices[i].on){slot=i;break;}if(slot<0)slot=e->voiceCursor;e->voiceCursor=(slot+1)%8;Voice*v=&e->voices[slot];
   v->on=true;v->slice=sl;v->gain=std::max(0.f,std::min(1.f,vel));v->begin=a;v->end=b;v->direction=e->reverse>.5f?-1:1;v->fadeFrames=std::max(8,e->sample.sampleRate/500);v->fadeFrames=std::min(v->fadeFrames,(b-a)/2);
@@ -100,7 +101,7 @@ static void* create_engine(const char* data_dir){
     if(load_wav(p.c_str(),e->sample)){
       e->status="break01.wav READY";
       const int total=(int)e->sample.l.size();
-      for(int i=0;i<16;i++){e->sliceStart[i]=(int)((long long)total*i/16);e->sliceEnd[i]=(int)((long long)total*(i+1)/16);}
+      for(int i=0;i<16;i++){e->sliceStart[i].store((int)((long long)total*i/16));e->sliceEnd[i].store((int)((long long)total*(i+1)/16));}
       // Analyze off the audio thread and map detected attacks to 16 playable regions.
       bl90::Onset onsets[64];
       // Use the left channel as the analysis source to avoid a second full-size
@@ -113,13 +114,13 @@ static void* create_engine(const char* data_dir){
           int boundary=onsets[std::min(found-1,pick)].frame;
           boundary=std::max(prev+128,std::min(total-(16-i)*128,boundary));
           if(boundary<=prev){valid=false;break;}
-          e->sliceEnd[i-1]=boundary; e->sliceStart[i]=boundary; prev=boundary;
+          e->sliceEnd[i-1].store(boundary); e->sliceStart[i].store(boundary); prev=boundary;
         }
-        if(valid){e->sliceStart[0]=0;e->sliceEnd[15]=total;}
+        if(valid){e->sliceStart[0].store(0);e->sliceEnd[15].store(total);}
         else for(int i=0;i<16;i++){e->sliceStart[i]=(int)((long long)total*i/16);e->sliceEnd[i]=(int)((long long)total*(i+1)/16);}
       }
     }
-    for(int i=0;i<16;i++){e->baseStart[i]=e->sliceStart[i];e->baseEnd[i]=e->sliceEnd[i];}
+    for(int i=0;i<16;i++){e->baseStart[i]=e->sliceStart[i].load();e->baseEnd[i]=e->sliceEnd[i].load();}
   }
   return e;
 }
@@ -133,7 +134,7 @@ static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)ret
    if(total>0){
      const int sl=std::max(0,std::min(15,(int)std::round(e->slice)));
      const int minGap=std::max(8,std::min(128,total/32));
-     const int oldStart=e->sliceStart[sl], oldEnd=e->sliceEnd[sl];
+     const int oldStart=e->sliceStart[sl].load(), oldEnd=e->sliceEnd[sl].load();
      const float norm=std::max(0.f,std::min(1.f,x));
      const int baseA=e->baseStart[sl], baseB=e->baseEnd[sl];
      int frame=baseA+(int)std::round(norm*std::max(0,baseB-baseA));
@@ -141,17 +142,17 @@ static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)ret
        const int lower=sl?e->sliceEnd[sl-1]+minGap:0;
        const int upper=e->sliceEnd[sl]-minGap;
        frame=std::max(lower,std::min(upper,frame));
-       if(frame!=oldStart){e->undoStart[sl]=oldStart;e->undoEnd[sl]=oldEnd;e->undoSlice=sl;e->undoValid=true;e->sliceStart[sl]=frame;}
+       if(frame!=oldStart){e->undoStart[sl]=oldStart;e->undoEnd[sl]=oldEnd;e->undoSlice=sl;e->undoValid=true;e->sliceStart[sl].store(frame);}
      } else {
        const int lower=e->sliceStart[sl]+minGap;
        const int upper=sl<15?e->sliceStart[sl+1]-minGap:total;
        frame=std::max(lower,std::min(upper,frame));
-       if(frame!=oldEnd){e->undoStart[sl]=oldStart;e->undoEnd[sl]=oldEnd;e->undoValid=true;e->sliceEnd[sl]=frame;}
+       if(frame!=oldEnd){e->undoStart[sl]=oldStart;e->undoEnd[sl]=oldEnd;e->undoValid=true;e->sliceEnd[sl].store(frame);}
      }
    }
    return;
  }
- if(!std::strcmp(k,"undo")){if(x>.5f&&e->undoValid){const int sl=e->undoSlice;e->sliceStart[sl]=e->undoStart[sl];e->sliceEnd[sl]=e->undoEnd[sl];e->undoValid=false;}return;}
+ if(!std::strcmp(k,"undo")){if(x>.5f&&e->undoValid){const int sl=e->undoSlice;e->sliceStart[sl].store(e->undoStart[sl]);e->sliceEnd[sl].store(e->undoEnd[sl]);e->undoValid=false;}return;}
  SET("interpolation",interpolation,0,2) SET("pitch",pitch,-24,24) SET("reverse",reverse,0,1) SET("mode",mode,0,2) SET("bits",bits,4,16) SET("rate",rate,0,1) SET("cutoff",cutoff,0,1) SET("volume",volume,0,1)
 #undef SET
 }
@@ -161,7 +162,7 @@ static int get_param_engine(void*p,const char*k,char*b,int n){if(!p||!k||!b||n<2
  if(!std::strcmp(k,"slice_start")||!std::strcmp(k,"slice_end")){
    const int total=(int)e->sample.l.size();
    const int sl=std::max(0,std::min(15,(int)std::round(e->slice)));
-   const int frame=!std::strcmp(k,"slice_start")?e->sliceStart[sl]:e->sliceEnd[sl];
+   const int frame=!std::strcmp(k,"slice_start")?e->sliceStart[sl].load():e->sliceEnd[sl].load();
    const int baseA=e->baseStart[sl], baseB=e->baseEnd[sl];
    x=baseB>baseA?(float)(frame-baseA)/(float)(baseB-baseA):0.f;
    std::snprintf(b,n,"%.5f",x);return 1;
