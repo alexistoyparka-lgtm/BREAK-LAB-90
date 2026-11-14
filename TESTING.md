@@ -33,6 +33,9 @@ This file separates automated host/build validation, package validation and phys
 
 ## Package validation
 
+Latest development candidate: CI run #106, commit `38eda3f6b40f229af43051e1fcecd07ebadf5d86`. ARMv7 build, wrapper host tests, engine smoke tests, packaging and artifact upload all passed. The generated inner ZIP was downloaded and inspected: 40 SHA256SUMS entries pass, and the plugin binary is ELF32 ARM EABI5. Its package is `BREAK-LAB-90-0.2.0-mpc-armv7.zip` (SHA-256 `59b9e5189a42a804601f2444377bfac49ca4bdc4cbe970330a6b875f31c10046`). This validates the build/package, not installation or appearance on physical MPC hardware.
+
+
 The latest CI artifact was downloaded and inspected separately:
 
 | Check | Result |
@@ -51,7 +54,7 @@ The installer round-trip used a disposable fixture and did not access or modify 
 
 ## Physical MPC Live 1 / OS 3.10
 
-**NOT YET TESTED — first controlled hardware test is the next release gate.**
+**NOT YET TESTED — first controlled hardware test is the next release gate.** The build #106 ZIP can be installed without manually opening an SSH shell when OpenMPC Plugin Manager VST 0.2.3+ is already installed: place the ZIP in `local-plugins/` beside a valid `Synths/` content folder on the same volume, then use the Manager's local-zip card. MPC OS 3.10.x no longer accepts the older stock USB autorun-script route.
 
 Requirements:
 - First-generation MPC Live (ARMv7 / armhf).
