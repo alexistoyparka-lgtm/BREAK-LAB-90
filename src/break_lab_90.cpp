@@ -102,10 +102,10 @@ static void* create_engine(const char* data_dir){
       for(int i=0;i<total;i++) mono[i]=0.5f*(e->sample.l[i]+e->sample.r[i]);
       bl90::Onset onsets[64];
       const int found=bl90::detect_onsets(mono.data(),total,e->sample.sampleRate,0.55f,24,onsets,64);
-      if(found>=4){
+      if(found>=15){
         int prev=0; bool valid=true;
         for(int i=1;i<16;i++){
-          const int pick=(i*found)/16;
+          const int pick=((i-1)*(found-1))/14;
           int boundary=onsets[std::min(found-1,pick)].frame;
           boundary=std::max(prev+128,std::min(total-(16-i)*128,boundary));
           if(boundary<=prev){valid=false;break;}
