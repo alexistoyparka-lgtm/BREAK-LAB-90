@@ -2,7 +2,7 @@ name: Build BREAK LAB 90
 
 on:
   push:
-    branches: [main]
+    branches: [main, amiga-sampler-next]
     paths:
       - "vst.json"
       - "params.lock"
@@ -18,13 +18,13 @@ jobs:
   build-armv7:
     uses: open-mpc/mpc-vst-plugins/.github/workflows/vst-release.yml@11d340572dcc93778f341a9484c5ae6c51126abe
     with:
-      tag: break-lab-90-v0.1.5
-      version: "0.1.5"
+      tag: break-lab-90-v0.2.0-rc1
+      version: "0.2.0"
       tools_ref: 11d340572dcc93778f341a9484c5ae6c51126abe
       vst_dir: .
       build: '"$MPC_VST/tools/build_port.sh" vst.json armv7'
       host_test: '"$MPC_VST/tools/test_port.sh" vst.json && bash tests/run_engine_smoke.sh'
       extra: engine/breaks:engine/breaks
       user_data: engine
-      about: "Breakbeat sampler prototype for MPC Live Gen1; includes WAV, MIDI, playback and slice-boundary smoke tests."
+      about: "Amiga-inspired breakbeat sampler for MPC Live Gen1; includes transient slicing and selectable Paula-style playback interpolation."
       dry_run: true
