@@ -2,6 +2,7 @@ extern "C" {
 #include "engine.h"
 }
 #include <stdint.h>
+#include <cmath>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -339,6 +340,56 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // Manual slice edits stay inside their original region and support one-step undo.
+    void *slice_edit = api->create(dir);
+    if (!slice_edit) return 1;
+    char boundary_value[32] = {};
+    api->set_param(slice_edit, "slice_start", "0.20");
+    api->set_param(slice_edit, "slice_end", "0.80");
+    if (!api->get_param(slice_edit, "slice_start", boundary_value, sizeof(boundary_value)) ||
+        fabs(atof(boundary_value) - 0.20) > 0.02) {
+        fprintf(stderr, "manual slice start edit failed: %s\\n", boundary_value);
+        api->destroy(slice_edit); return 1;
+    }
+    api->set_param(slice_edit, "slice_start", "0.30");
+    api->set_param(slice_edit, "undo", "1");
+    memset(boundary_value, 0, sizeof(boundary_value));
+    api->get_param(slice_edit, "slice_start", boundary_value, sizeof(boundary_value));
+    if (fabs(atof(boundary_value) - 0.20) > 0.02) {
+        fprintf(stderr, "manual slice undo failed: %s\\n", boundary_value);
+        api->destroy(slice_edit); return 1;
+    }
+    api->destroy(slice_edit);
+
+    // Starting a second voice must not reset the shared Vintage sample-hold phase.
+    // Both engines begin with the same held sample; retriggering one engine between
+    // decimator ticks must not change its next output frame.
+    void *hold_phase_ref = api->create(dir);
+    void *hold_phase_retrigger = api->create(dir);
+    if (!hold_phase_ref || !hold_phase_retrigger) return 1;
+    api->set_param(hold_phase_ref, "mode", "1");
+    api->set_param(hold_phase_retrigger, "mode", "1");
+    api->set_param(hold_phase_ref, "rate", "1");
+    api->set_param(hold_phase_retrigger, "rate", "1");
+    uint8_t hold_phase_note[3] = {0x90, 36, 100};
+    int16_t hold_phase_first_ref[2] = {}, hold_phase_first_retrigger[2] = {};
+    api->midi(hold_phase_ref, hold_phase_note, 3);
+    api->midi(hold_phase_retrigger, hold_phase_note, 3);
+    api->render(hold_phase_ref, hold_phase_first_ref, 1);
+    api->render(hold_phase_retrigger, hold_phase_first_retrigger, 1);
+    api->midi(hold_phase_retrigger, hold_phase_note, 3);
+    int16_t hold_phase_next_ref[2] = {}, hold_phase_next_retrigger[2] = {};
+    api->render(hold_phase_ref, hold_phase_next_ref, 1);
+    api->render(hold_phase_retrigger, hold_phase_next_retrigger, 1);
+    api->destroy(hold_phase_ref);
+    api->destroy(hold_phase_retrigger);
+    if (hold_phase_next_ref[0] != hold_phase_next_retrigger[0] ||
+        hold_phase_next_ref[1] != hold_phase_next_retrigger[1]) {
+        fprintf(stderr, "new voice reset the shared Vintage sample-hold phase: ref=%d retrigger=%d\\n",
+                hold_phase_next_ref[0], hold_phase_next_retrigger[0]);
+        return 1;
+    }
+
     // Mono PCM at 44.1 kHz is also a supported source format.
     if (!make_wav(breaks + "/break01.wav", 44100, 1)) return 1;
     engine = api->create(dir);
@@ -362,6 +413,53 @@ int main(int argc, char **argv) {
         sample_rate_difference += abs((int)sample_rate_48k_out[i * 2] - (int)mono_out[i * 2]);
     if (sample_rate_difference < 5000) {
         fprintf(stderr, "48 kHz source rate was not reflected in playback step: %ld\n", sample_rate_difference);
+        return 1;
+    }
+
+    // The new interpolation selector must change the rendered signal at fractional pitch.
+    void *hold_engine = api->create(dir);
+    void *cubic_engine = api->create(dir);
+    if (!hold_engine || !cubic_engine) return 1;
+    api->set_param(hold_engine, "interpolation", "0");
+    api->set_param(cubic_engine, "interpolation", "2");
+    api->set_param(hold_engine, "pitch", "0.37");
+    api->set_param(cubic_engine, "pitch", "0.37");
+    uint8_t interp_note[3] = {0x90, 36, 100};
+    int16_t hold_out[128 * 2] = {}, cubic_out[128 * 2] = {};
+    api->midi(hold_engine, interp_note, 3); api->render(hold_engine, hold_out, 128);
+    api->midi(cubic_engine, interp_note, 3); api->render(cubic_engine, cubic_out, 128);
+    long interpolation_difference = 0;
+    for (int i = 0; i < 256; ++i) interpolation_difference += abs((int)hold_out[i] - (int)cubic_out[i]);
+    api->destroy(hold_engine); api->destroy(cubic_engine);
+    if (interpolation_difference < 100) {
+        fprintf(stderr, "Paula Hold and Cubic interpolation did not produce distinct output: %ld\\n", interpolation_difference);
+        return 1;
+    }
+
+    // PAULA has its own compact clock-divider range; changing its rate must
+    // alter the sample-hold output independently of Vintage's wider crush range.
+    void *paula_clock_fast = api->create(dir);
+    void *paula_clock_slow = api->create(dir);
+    if (!paula_clock_fast || !paula_clock_slow) return 1;
+    api->set_param(paula_clock_fast, "mode", "2");
+    api->set_param(paula_clock_slow, "mode", "2");
+    api->set_param(paula_clock_fast, "bits", "8");
+    api->set_param(paula_clock_slow, "bits", "8");
+    api->set_param(paula_clock_fast, "rate", "0");
+    api->set_param(paula_clock_slow, "rate", "1");
+    uint8_t paula_note[3] = {0x90, 36, 100};
+    int16_t paula_fast_out[256] = {}, paula_slow_out[256] = {};
+    api->midi(paula_clock_fast, paula_note, 3);
+    api->midi(paula_clock_slow, paula_note, 3);
+    api->render(paula_clock_fast, paula_fast_out, 128);
+    api->render(paula_clock_slow, paula_slow_out, 128);
+    long paula_clock_difference = 0;
+    for (int i = 0; i < 256; ++i)
+        paula_clock_difference += abs((int)paula_fast_out[i] - (int)paula_slow_out[i]);
+    api->destroy(paula_clock_fast);
+    api->destroy(paula_clock_slow);
+    if (paula_clock_difference < 100) {
+        fprintf(stderr, "PAULA clock control did not change sample playback: %ld\\n", paula_clock_difference);
         return 1;
     }
 
@@ -392,6 +490,6 @@ int main(int argc, char **argv) {
     unlink((breaks + "/break01.wav").c_str());
     rmdir(breaks.c_str());
     rmdir(dir);
-    puts("PASS: bundled break loading, 48 kHz stereo channel separation, 44.1 kHz mono WAV loading and sample-rate conversion, click-safe fade-in, all 16 MIDI slices, eight-voice polyphony and voice stealing, filter cutoff, master volume and velocity scaling, Vintage bit-depth/rate crushing, pitch playback/clamping, selected-slice audition, reverse playback direction and malformed RIFF/PCM metadata rejection");
+    puts("PASS: bundled break loading, 48 kHz stereo channel separation, 44.1 kHz mono WAV loading and sample-rate conversion, click-safe fade-in, all 16 MIDI slices, eight-voice polyphony and voice stealing, filter cutoff, master volume and velocity scaling, Vintage bit-depth/rate crushing, pitch playback/clamping, selected-slice audition, reverse playback direction, selectable Paula Hold/Linear/Cubic interpolation and malformed RIFF/PCM metadata rejection");
     return 0;
 }

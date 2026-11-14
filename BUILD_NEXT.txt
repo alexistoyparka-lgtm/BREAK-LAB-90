@@ -1,39 +1,45 @@
 BREAK LAB 90 — DEVELOPMENT HANDOFF
+Current branch: amiga-sampler-next
+Target: MPC Live Gen1, ARMv7 / armhf, MPC OS 3.10.1
+Release candidate: 0.2.0-rc1
+Base branch main is intentionally unchanged; keep PR #2 open until physical MPC acceptance.
 
-CURRENT CANDIDATE
-- Version: 0.1.5
-- Target: first-generation MPC Live, ARMv7 / armhf, MPC OS 3.10
-- Latest CI: run #72, successful
-- Package: break-lab-90-v0.1.5 artifact, ARMv7 ZIP
-- Status: ready for a controlled first hardware test on a backed-up test device; not hardware-certified.
+CURRENT IMPLEMENTED FEATURES
+- Two-page custom MPC skin: PLAY / SLICE SELECT and CHARACTER / SOUND DESIGN.
+- 16 MIDI slices (notes 36–51), C4 selected-slice audition.
+- Heuristic transient detection on sample load, with equal-slice fallback.
+- Clean, Vintage and PAULA playback modes.
+- Paula Hold, Linear and Cubic interpolation.
+- PAULA-specific playback divider (1..6); not cycle-accurate hardware emulation.
+- Vintage sample-hold rate reduction and bit-depth quantisation.
+- 8-voice playback, reverse, pitch, low-pass and master level.
+- Five factory presets, including Paula Jungle.
+- Bundled original break WAV.
 
-COMPLETED
-- [x] Validate project layout, params.json schema and engine API against the pinned OpenMPC toolchain.
-- [x] Build the ARMv7 plugin package successfully.
-- [x] Pass tools/test_port.sh with AddressSanitizer and UBSan enabled.
-- [x] Validate the generated package and confirm the plugin binary is ELF32 ARM hard-float.
-- [x] Add direct engine-level smoke tests for WAV loading, MIDI slice triggering, reverse, pitch, effects, polyphony, velocity and malformed WAV rejection.
-- [x] Inspect generated skin preview and correct the truncated Slice control label.
-- [x] Verify package SHA256SUMS and shell syntax of install.sh / uninstall.sh.
-- [x] Run installer/uninstaller round-trip against a disposable MPC.settings fixture; plugin registration, backup, removal and service stop/start hooks passed.
+RECENT ENGINE WORK
+- Removed the shared sample-hold clock reset from voice start; prevents pad retriggers from resetting the decimator phase while other voices play.
+- Added an ASan/UBSan regression test for the shared sample-hold phase.
+- Added a PAULA-specific rate-divider range and an engine output regression test.
+- Aligned vst.json plugin version metadata to 200 for 0.2.0.
 
-REMAINING — HARDWARE ACCEPTANCE
-1. Confirm root SSH access to the MPC Live 1. The installer cannot run without it.
-2. Make a complete backup of MPC.settings, projects and any existing plugin folder.
-3. Install the exact CI artifact; do not rebuild or modify the ZIP.
-4. Verify plugin discovery, skin rendering, parameter controls and Q-Link mappings.
-5. Verify all 16 MIDI slices, C4 selected-slice audition, pitch, reverse, Clean/Vintage, Bits, Rate Crush, Filter and Volume.
-6. Save, close, reopen and verify project/preset persistence.
-7. Run a 10-minute pattern with up to eight overlapping voices; check dropouts, hangs and CPU stability.
-8. Restart MPC and confirm the plugin remains discoverable and the WAV reloads.
-9. Keep the settings backup until the device is confirmed healthy.
+CI STATUS
+- Baseline run #91 passed ARMv7 build, wrapper tests, engine tests, skin generation and package creation.
+- Run #96 passed ARMv7 build, wrapper tests, ASan/UBSan engine tests, packaging and artifact upload. The artifact was downloaded; outer ZIP integrity, inner SHA256SUMS and ELF32 ARM EABI5 hard-float were verified. Physical MPC acceptance is still outstanding.
+- Physical MPC Live Gen1 acceptance remains outstanding.
 
-DO NOT CLAIM HARDWARE COMPATIBILITY UNTIL THE ABOVE CHECKS PASS.
+NEXT DEVELOPMENT PHASES
+1. Manual Start/End controls and one-step undo are implemented; run #106 passed CI after fixing parameter order. Next: use OpenMPC Plugin Manager 0.2.3+ local ZIP support to install the package, then validate on physical MPC and improve boundary workflow.
+2. Improved transient analysis: multi-band energy flux, sensitivity and minimum-gap controls.
+3. Safe sample asset handoff and multiple sample slots/banks.
+4. Additional WAV decoding formats with strict memory limits.
+5. Per-slice gain/pan/tune/reverse/loop/choke and envelopes.
+6. PAULA period/clock mapping and stereo modes; benchmark against ARMv7.
+7. Background-only time-stretch/resampling after CPU and memory profiling.
+8. Studio character processing: saturation, transient shaping and controlled soft clipping.
+9. Three-page UI evolution (PLAY / SLICE / CHARACTER), with Q-Link mapping and clear touch targets.
 
-FUTURE DEVELOPMENT AFTER FIRST DEVICE TEST
-- Audio-thread-safe sample replacement and multi-WAV bank selection.
-- Transient detection and per-slice editable boundaries.
-- Improved multi-page BROWSE / SLICE / TONE workflow and Q-Link mappings.
-- CPU profiling before attempting pitch-preserving time stretch or resampling.
-
-The current artifact is a test candidate, not a production release.
+NON-NEGOTIABLES
+- Preserve the OpenMPC VST2 wrapper, existing parameter keys and MIDI note map.
+- No allocation, file I/O, locks, logging or unbounded work in the audio callback.
+- Do not merge PR #2 or claim hardware compatibility before physical MPC testing.
+- Keep main / the tested baseline available as rollback.

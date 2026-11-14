@@ -8,11 +8,19 @@ This file separates automated host/build validation, package validation and phys
 |---|---|---|
 | ARMv7 / armhf build | 32-bit ARM VST binary is produced | Passed in CI run #72 |
 | OpenMPC wrapper host test | Parameter, preset and wrapper checks pass | Passed in CI run #72 |
-| Engine smoke test under ASan/UBSan | No sanitizer errors; bundled WAV loads | Passed in CI run #72 |
+| Engine smoke test under ASan/UBSan | No sanitizer errors; bundled WAV loads | Passed in CI run #91; sample-hold retrigger regression pending run #93 |
 | 48 kHz stereo WAV | Loads, preserves independent left/right channels and uses source-rate playback step | Passed |
 | 44.1 kHz mono WAV | Loads and plays at correct host-rate step | Passed |
 | Invalid RIFF size / PCM byte rate | File is rejected | Passed |
-| 16 MIDI slices | Notes 36–51 each produce audio | Passed |
+| 16 MIDI slices | Notes 36–51 each produce audio | Passed on previous baseline; rerun required for 0.2.0-rc1 |
+| Transient detector | Synthetic attack fixture returns ordered attack candidates | Pending CI |
+| Paula quantisation / cubic interpolation | Bounded quantisation and interpolation endpoint checks | Pending CI |
+| Automatic 16-slice remapping | At least 15 detected attacks produce 16 valid regions; otherwise equal-slice fallback | Pending CI |
+| Resampling selector | Paula Hold / Linear / Cubic parameter round-trip and audible output difference | Passed in CI run #90 |
+| Vintage sample-hold clock | Retriggering a voice does not reset the shared decimator phase | Passed in CI run #96 |
+| PAULA clock divider | PAULA Rate uses its dedicated 1..6 playback divider and changes rendered output | Passed in CI run #96 |
+| Custom MPC skin | PLAY and CHARACTER pages, Q-Link maps and preview generation | Passed in CI run #90 |
+| PAULA mode | Third mode option compiles and packages with the MPC skin | Passed in CI run #90 |
 | Polyphony | Eight voices overlap; ninth trigger steals a voice safely | Passed |
 | Selected slice audition | MIDI note 60 plays selected slice | Passed |
 | Filter / master volume | Controls alter rendered signal | Passed |
@@ -21,9 +29,12 @@ This file separates automated host/build validation, package validation and phys
 | Pitch | Parameter round-trip, clamping and audible playback-rate change work | Passed |
 | Reverse | Reverse changes sample order and stays inside selected slice | Passed |
 | Slice edge fade | First output frame starts at silence; sample remains audible | Passed |
-| Factory presets | Four presets validate and appear in host preset list | Passed |
+| Factory presets | Five presets validate and appear in host preset list, including Paula Jungle | Passed in CI run #91 |
 
 ## Package validation
+
+Latest development candidate: CI run #106, commit `38eda3f6b40f229af43051e1fcecd07ebadf5d86`. ARMv7 build, wrapper host tests, engine smoke tests, packaging and artifact upload all passed. The generated inner ZIP was downloaded and inspected: 40 SHA256SUMS entries pass, and the plugin binary is ELF32 ARM EABI5. Its package is `BREAK-LAB-90-0.2.0-mpc-armv7.zip` (SHA-256 `59b9e5189a42a804601f2444377bfac49ca4bdc4cbe970330a6b875f31c10046`). This validates the build/package, not installation or appearance on physical MPC hardware.
+
 
 The latest CI artifact was downloaded and inspected separately:
 
@@ -43,7 +54,7 @@ The installer round-trip used a disposable fixture and did not access or modify 
 
 ## Physical MPC Live 1 / OS 3.10
 
-**NOT YET TESTED — first controlled hardware test is the next release gate.**
+**NOT YET TESTED — first controlled hardware test is the next release gate.** The build #106 ZIP can be installed without manually opening an SSH shell when OpenMPC Plugin Manager VST 0.2.3+ is already installed: place the ZIP in `local-plugins/` beside a valid `Synths/` content folder on the same volume, then use the Manager's local-zip card. MPC OS 3.10.x no longer accepts the older stock USB autorun-script route.
 
 Requirements:
 - First-generation MPC Live (ARMv7 / armhf).
@@ -63,7 +74,7 @@ Requirements:
 | Audio quality | No hangs, unexpected silence, severe clicks or distortion | Not tested |
 | Pitch / Reverse | Both controls behave correctly during playback | Not tested |
 | Vintage | Bits and Rate Crush respond to controls | Not tested |
-| Presets | All four factory presets load and restore values | Not tested |
+| Presets | All five factory presets load and restore values | Not tested |
 | Project persistence | Save, close, reopen and confirm parameters/preset remain correct | Not tested |
 | CPU / stability | No dropouts during a 10-minute pattern with 8 voices | Not tested |
 | Restart | Plugin remains discoverable and WAV reloads after MPC restart | Not tested |
@@ -78,4 +89,4 @@ Do not call this a finished or hardware-certified plugin until:
 4. Skin, Q-Links, audio, MIDI, presets and save/reload pass.
 5. Restart and 10-minute stability checks pass.
 
-The current 0.1.5 build is a controlled-test candidate, not a production release.
+The 0.2.0-rc1 branch is an experimental candidate, not a production release. The previous 0.1.5 baseline remains the rollback reference.

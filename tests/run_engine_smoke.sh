@@ -9,3 +9,6 @@ CXX="${CXX:-g++}"
   -I"$TOOLS_DIR/wrapper" "$ROOT/src/break_lab_90.cpp" "$ROOT/tests/engine_smoke.cpp" \
   -o "$TMP/engine_smoke"
 "$TMP/engine_smoke" "$ROOT/engine"
+"$CXX" -std=gnu++14 -fsanitize=address,undefined -fno-omit-frame-pointer -g -O1 \
+  "$ROOT/tests/amiga_dsp_tests.cpp" -o "$TMP/amiga_dsp_tests"
+"$TMP/amiga_dsp_tests"

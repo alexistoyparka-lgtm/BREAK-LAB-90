@@ -31,7 +31,8 @@
       "name": "Mode",
       "options": [
         "Clean",
-        "Vintage"
+        "Vintage",
+        "PAULA"
       ],
       "default": 0
     },
@@ -72,9 +73,44 @@
       "name": "Sample Status",
       "type": "readout",
       "display": "string",
-      "poll": false,
+      "poll": true,
       "min": 0,
       "max": 1,
+      "default": 0
+    },
+    {
+      "key": "interpolation",
+      "name": "Resampling",
+      "options": [
+        "Paula Hold",
+        "Linear",
+        "Cubic"
+      ],
+      "default": 1
+    },
+    {
+      "key": "slice_start",
+      "name": "Slice Start",
+      "type": "float",
+      "min": 0,
+      "max": 1,
+      "default": 0
+    },
+    {
+      "key": "slice_end",
+      "name": "Slice End",
+      "type": "float",
+      "min": 0,
+      "max": 1,
+      "default": 1
+    },
+    {
+      "key": "undo",
+      "name": "Undo Slice Edit",
+      "options": [
+        "Ready",
+        "Undo"
+      ],
       "default": 0
     }
   ],
@@ -84,7 +120,8 @@
       "keys": [
         "slice",
         "pitch",
-        "reverse"
+        "reverse",
+        "interpolation"
       ]
     },
     {
@@ -96,6 +133,15 @@
         "cutoff",
         "volume",
         "status"
+      ]
+    },
+    {
+      "label": "Manual Slice Editing",
+      "keys": [
+        "slice",
+        "slice_start",
+        "slice_end",
+        "undo"
       ]
     }
   ]

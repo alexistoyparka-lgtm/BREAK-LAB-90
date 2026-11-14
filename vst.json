@@ -2,7 +2,7 @@
   "name": "BREAK LAB 90",
   "vendor": "OpenBench",
   "uid": "Brk9",
-  "version": 150,
+  "version": 200,
   "so": "break_lab_90.so",
   "params": "vst/params.json",
   "build": {
@@ -23,5 +23,7 @@
     "MODULE_SUBDIR": "\"engine\"",
     "SAMPLE_ACCURATE": 1
   },
-  "presets": "presets.json"
+  "presets": "presets.json",
+  "layout": "skin/layout.conf",
+  "art": "html"
 }
