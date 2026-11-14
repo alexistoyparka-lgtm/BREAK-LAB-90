@@ -2,13 +2,15 @@ name: Build BREAK LAB 90
 
 on:
   push:
-    branches: [main, amiga-sampler-next]
+    branches: [main, amiga-sampler-next, fix/restore-usb-package]
     paths:
       - "vst.json"
       - "params.lock"
       - "presets.json"
       - "src/**"
       - "tests/**"
+      - "tools/**"
+      - "skin/**"
       - "vst/**"
       - "engine/**"
       - ".github/workflows/build.yml"
@@ -28,3 +30,32 @@ jobs:
       user_data: engine
       about: "Amiga-inspired breakbeat sampler for MPC Live Gen1; includes transient slicing and selectable Paula-style playback interpolation."
       dry_run: true
+
+  package-usb:
+    needs: build-armv7
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: break-lab-90-v0.2.0-rc1
+          path: upstream
+      - name: Test and package USB and Plugin Manager distributions
+        run: |
+          source=upstream/dist/BREAK-LAB-90-0.2.0-mpc-armv7.zip
+          python3 tests/test_package_usb.py "$source"
+          python3 tools/package_usb.py "$source" dist
+          cd dist
+          sha256sum *.zip > SHA256SUMS
+      - name: Upload both tested distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: break-lab-90-v0.2.0-usb-candidate
+          path: |
+            dist/*.zip
+            dist/SHA256SUMS
+            docs/INSTALL_USB_FR.md
+            docs/USB_PACKAGING_AUDIT.md
+          retention-days: 14

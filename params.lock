@@ -8,3 +8,6 @@ cutoff
 volume
 status
 interpolation
+slice_start
+slice_end
+undo

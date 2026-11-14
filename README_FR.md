@@ -4,6 +4,14 @@
 
 BREAK LAB 90 est un instrument sampler de breaks pour OpenMPC, ciblant la MPC Live de première génération (ARM 32 bits / armhf). MPC OS 3.10 est la version visée.
 
+## Installation USB 0.2.0
+
+Le candidat rétablit le ZIP `mpc-sdk` et son descripteur `plugin.json`, présents
+dans la 0.1.6 détectée sur votre MPC mais absents du build 106.
+Suivre [la procédure USB en français](docs/INSTALL_USB_FR.md).
+Le format Plugin Manager reste disponible. Voir [l’audit](docs/USB_PACKAGING_AUDIT.md).
+La validation physique de la 0.2.0 reste à faire.
+
 ## État de validation
 
 - Compilation ARMv7 / armhf : réussie dans GitHub Actions, run **#91** (build de référence ; nouveau correctif en cours de validation dans le run #93).
