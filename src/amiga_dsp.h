@@ -16,8 +16,14 @@ inline int detect_onsets(const float* x, int n, int sampleRate,
                          float sensitivity, int minGapMs,
                          Onset* out, int capacity) {
     if (!x || !out || n < 128 || sampleRate < 8000 || capacity <= 0) return 0;
-    const int hop = 64;
-    const int win = 256;
+    int hop = 64;
+    int win = 256;
+    // Bound analysis to at most 4096 windows even for long stereo breaks.
+    if ((n - win) / hop > 4096) {
+        const int scale = ((n - win) / (4096 * 64)) + 1;
+        hop = 64 * scale;
+        win = 4 * hop;
+    }
     const int minGap = std::max(hop, sampleRate * std::max(10, minGapMs) / 1000);
     const float sens = std::max(0.0f, std::min(1.0f, sensitivity));
     const int count = (n - win) / hop;
