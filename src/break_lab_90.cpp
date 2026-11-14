@@ -27,7 +27,7 @@ struct Engine {
   int heldSlice=0;
   int sliceStart[16]={}; int sliceEnd[16]={};
   int baseStart[16]={}; int baseEnd[16]={};
-  int undoStart[16]={}; int undoEnd[16]={}; bool undoValid=false;
+  int undoStart[16]={}; int undoEnd[16]={}; int undoSlice=0; bool undoValid=false;
   float interpolation=1;
   int rateCounter=0;
   float heldL=0, heldR=0;
@@ -141,7 +141,7 @@ static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)ret
        const int lower=sl?e->sliceEnd[sl-1]+minGap:0;
        const int upper=e->sliceEnd[sl]-minGap;
        frame=std::max(lower,std::min(upper,frame));
-       if(frame!=oldStart){e->undoStart[sl]=oldStart;e->undoEnd[sl]=oldEnd;e->undoValid=true;e->sliceStart[sl]=frame;}
+       if(frame!=oldStart){e->undoStart[sl]=oldStart;e->undoEnd[sl]=oldEnd;e->undoSlice=sl;e->undoValid=true;e->sliceStart[sl]=frame;}
      } else {
        const int lower=e->sliceStart[sl]+minGap;
        const int upper=sl<15?e->sliceStart[sl+1]-minGap:total;
@@ -151,7 +151,7 @@ static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)ret
    }
    return;
  }
- if(!std::strcmp(k,"undo")){if(x>.5f&&e->undoValid){const int sl=std::max(0,std::min(15,(int)std::round(e->slice)));e->sliceStart[sl]=e->undoStart[sl];e->sliceEnd[sl]=e->undoEnd[sl];e->undoValid=false;}return;}
+ if(!std::strcmp(k,"undo")){if(x>.5f&&e->undoValid){const int sl=e->undoSlice;e->sliceStart[sl]=e->undoStart[sl];e->sliceEnd[sl]=e->undoEnd[sl];e->undoValid=false;}return;}
  SET("interpolation",interpolation,0,2) SET("pitch",pitch,-24,24) SET("reverse",reverse,0,1) SET("mode",mode,0,2) SET("bits",bits,4,16) SET("rate",rate,0,1) SET("cutoff",cutoff,0,1) SET("volume",volume,0,1)
 #undef SET
 }
