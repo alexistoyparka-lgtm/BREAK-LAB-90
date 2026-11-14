@@ -24,7 +24,7 @@ Le paquet est donc prêt pour un **premier essai contrôlé sur une MPC de test 
 - Note MIDI 60 (C4) : audition de la slice sélectionnée.
 - Pitch de -24 à +24 demi-tons.
 - Lecture Forward / Reverse.
-- Modes Clean et Vintage / Paula-style.
+- Trois modes : Clean, Vintage et PAULA (lecture sans interpolation, caractère 8-bit / sample-hold).
 - Trois modes de lecture : Paula Hold (sans interpolation), Linear et Cubic.
 - Réduction de profondeur de bits et Rate Crush en mode Vintage.
 - Filtre passe-bas et volume général.
