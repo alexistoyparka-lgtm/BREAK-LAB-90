@@ -112,6 +112,74 @@
         "Undo"
       ],
       "default": 0
+    },
+    {
+      "key": "pad_layout",
+      "name": "Pad Layout",
+      "options": [
+        "Legacy 36-51",
+        "Chromatic",
+        "Major",
+        "Minor",
+        "MPC Drum"
+      ],
+      "default": 0
+    },
+    {
+      "key": "pad_root",
+      "name": "Pad 1 Note",
+      "type": "float",
+      "display": "int",
+      "min": 0,
+      "max": 127,
+      "default": 36
+    },
+    {
+      "key": "pad_stride",
+      "name": "Pad Row Step",
+      "type": "float",
+      "display": "int",
+      "min": 4,
+      "max": 12,
+      "default": 4
+    },
+    {
+      "key": "pad_learn",
+      "name": "Learn Pads",
+      "options": [
+        "Ready",
+        "Learn"
+      ],
+      "momentary": true,
+      "default": 0
+    },
+    {
+      "key": "midi_note",
+      "name": "MIDI / Pad Learn",
+      "type": "readout",
+      "display": "string",
+      "poll": true,
+      "min": 0,
+      "max": 1,
+      "default": 0
+    },
+    {
+      "key": "break_select",
+      "name": "Break",
+      "options": [
+        "Original Break",
+        "Warehouse Run",
+        "Chrome Break",
+        "Redline Break",
+        "Neon Shuffle",
+        "Dust Circuit",
+        "Razor Step",
+        "Basement Snap",
+        "Ghost Runner",
+        "Concrete Swing",
+        "Subway Funk"
+      ],
+      "default": 0
     }
   ],
   "sections": [
@@ -142,6 +210,23 @@
         "slice_start",
         "slice_end",
         "undo"
+      ]
+    },
+    {
+      "label": "Pad Setup",
+      "keys": [
+        "pad_layout",
+        "pad_root",
+        "pad_stride",
+        "pad_learn",
+        "midi_note"
+      ]
+    },
+    {
+      "label": "Sample Bank",
+      "keys": [
+        "break_select",
+        "status"
       ]
     }
   ]

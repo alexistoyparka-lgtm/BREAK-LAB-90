@@ -6,6 +6,8 @@ extern "C" {
 #include "engine.h"
 }
 #include "amiga_dsp.h"
+#include "pad_mapping.h"
+#include "sample_bank.h"
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -14,29 +16,39 @@ extern "C" {
 #include <vector>
 #include <algorithm>
 #include <atomic>
+#include <cerrno>
+#include <cctype>
 
 namespace {
 constexpr double PI = 3.14159265358979323846;
 struct Sample { std::vector<float> l, r; int channels=0; int sampleRate=44100; };
+struct BankSlot { Sample sample; int start[16]={}, end[16]={}; };
 struct Voice { bool on=false; double pos=0; int begin=0, end=0; int direction=1; int fadeFrames=88; float gain=1; int slice=0; };
 struct Engine {
-  Sample sample;
+  BankSlot bank[bl90::BANK_COUNT];
+  Sample* sample=&bank[0].sample;
+  int selectedBank=0;
   Voice voices[8];
   int voiceCursor=0;
   float slice=0, pitch=0, reverse=0, mode=0, bits=16, rate=0, cutoff=1, volume=.85f;
   float lpL=0, lpR=0;
   int heldSlice=0;
+  // One atomic snapshot prevents partially applied pad calibration.
+  std::atomic<unsigned> padMap{bl90::pack_pad_map(bl90::LegacyPads,36,4)};
+  std::atomic<unsigned> padChanged{0};
+  std::atomic<int> padLearnStage{0}, padLearnRoot{-1};
+  std::atomic<int> lastMidiNote{-1};
   std::atomic<int> sliceStart[16]; std::atomic<int> sliceEnd[16];
   int baseStart[16]={}; int baseEnd[16]={};
   int undoStart[16]={}; int undoEnd[16]={}; int undoSlice=0; bool undoValid=false;
   float interpolation=1;
   int rateCounter=0;
   float heldL=0, heldR=0;
-  std::string status="NO WAV: add breaks/break01.wav";
+  char status[128]="NO WAV: add breaks/break01.wav";
 };
 static uint16_t u16(const unsigned char*p){return (uint16_t)(p[0]|(p[1]<<8));}
 static uint32_t u32(const unsigned char*p){return (uint32_t)p[0]|((uint32_t)p[1]<<8)|((uint32_t)p[2]<<16)|((uint32_t)p[3]<<24);}
-static bool load_wav(const char* path, Sample& s) {
+static bool load_wav(const char* path, Sample& s, size_t remainingFrames) {
   FILE*f=std::fopen(path,"rb"); if(!f)return false;
   if(std::fseek(f,0,SEEK_END)!=0){std::fclose(f);return false;}
   long fileSize=std::ftell(f);
@@ -62,7 +74,7 @@ static bool load_wav(const char* path, Sample& s) {
      dataBytes%(2u*ch)!=0){std::fclose(f);return false;}
   const size_t frames=dataBytes/(2*ch);
   // Two decoded float channels: cap resident sample memory at 64 MiB on MPC Gen1.
-  if(frames<16||frames>8u*1024u*1024u){std::fclose(f);return false;}
+  if(frames<16||frames>remainingFrames){std::fclose(f);return false;}
   if(std::fseek(f,dataAt,SEEK_SET)!=0){std::fclose(f);return false;}
   s.l.resize(frames);s.r.resize(frames);s.channels=ch;s.sampleRate=sampleRate;
   unsigned char b[65536]; size_t frame=0;
@@ -80,12 +92,12 @@ static bool load_wav(const char* path, Sample& s) {
   std::fclose(f);return true;
 }
 static void start_voice(Engine*e,int sl,float vel){
-  if(e->sample.l.empty()) return;
+  if(e->sample->l.empty()) return;
   sl=std::max(0,std::min(15,sl));
-  int total=(int)e->sample.l.size(), a=e->sliceStart[sl].load(), b=e->sliceEnd[sl].load();
+  int total=(int)e->sample->l.size(), a=e->sliceStart[sl].load(), b=e->sliceEnd[sl].load();
   if(b-a<2)return;
   int slot=-1;for(int i=0;i<8;i++)if(!e->voices[i].on){slot=i;break;}if(slot<0)slot=e->voiceCursor;e->voiceCursor=(slot+1)%8;Voice*v=&e->voices[slot];
-  v->on=true;v->slice=sl;v->gain=std::max(0.f,std::min(1.f,vel));v->begin=a;v->end=b;v->direction=e->reverse>.5f?-1:1;v->fadeFrames=std::max(8,e->sample.sampleRate/500);v->fadeFrames=std::min(v->fadeFrames,(b-a)/2);
+  v->on=true;v->slice=sl;v->gain=std::max(0.f,std::min(1.f,vel));v->begin=a;v->end=b;v->direction=e->reverse>.5f?-1:1;v->fadeFrames=std::max(8,e->sample->sampleRate/500);v->fadeFrames=std::min(v->fadeFrames,(b-a)/2);
   v->pos=v->direction<0?(b-1):a;
   // Keep the shared sample-hold clock running when a new voice starts.
   // Resetting it here makes every pad retrigger the Vintage/PAULA decimator,
@@ -94,43 +106,165 @@ static void start_voice(Engine*e,int sl,float vel){
 static float quantize(float x,int bits){bits=std::max(4,std::min(16,bits));float levels=(float)((1u<<(bits-1))-1u);return std::round(x*levels)/levels;}
 }
 
+static void prepare_bank(BankSlot& slot){
+  const int total=(int)slot.sample.l.size();
+  for(int i=0;i<16;i++){slot.start[i]=(int)((long long)total*i/16);slot.end[i]=(int)((long long)total*(i+1)/16);}
+  bl90::Onset onsets[64];
+  const int found=bl90::detect_onsets(slot.sample.l.data(),total,slot.sample.sampleRate,0.55f,24,onsets,64);
+  if(found>=15){
+    int prev=0;bool valid=true;
+    for(int i=1;i<16;i++){
+      const int pick=((i-1)*(found-1))/14;
+      int boundary=onsets[std::min(found-1,pick)].frame;
+      boundary=std::max(prev+128,std::min(total-(16-i)*128,boundary));
+      if(boundary<=prev){valid=false;break;}
+      slot.end[i-1]=boundary;slot.start[i]=boundary;prev=boundary;
+    }
+    if(valid){slot.start[0]=0;slot.end[15]=total;}
+    else for(int i=0;i<16;i++){slot.start[i]=(int)((long long)total*i/16);slot.end[i]=(int)((long long)total*(i+1)/16);}
+  }
+}
+static void silence_voices(Engine*e){
+  for(auto&v:e->voices)v.on=false;
+  e->voiceCursor=0;e->rateCounter=0;e->heldL=e->heldR=e->lpL=e->lpR=0;
+}
+static bool select_bank(Engine*e,int index){
+  if(index<0||index>=bl90::BANK_COUNT)return false;
+  BankSlot& slot=e->bank[index];
+  if(slot.sample.l.empty()){
+    std::snprintf(e->status,sizeof(e->status),"MISSING: %s",bl90::BANK_NAMES[index]);
+    return false;
+  }
+  if(e->selectedBank!=index||e->sample!=&slot.sample){
+    silence_voices(e);
+    e->selectedBank=index;e->sample=&slot.sample;e->undoValid=false;
+    for(int i=0;i<16;i++){
+      e->baseStart[i]=slot.start[i];e->baseEnd[i]=slot.end[i];
+      e->sliceStart[i].store(slot.start[i]);e->sliceEnd[i].store(slot.end[i]);
+    }
+  }
+  std::snprintf(e->status,sizeof(e->status),"%s READY",index?bl90::BANK_NAMES[index]:"break01.wav");
+  return true;
+}
 static void* create_engine(const char* data_dir){
   Engine*e=new Engine();
+  for(int i=0;i<16;i++){e->sliceStart[i].store(0);e->sliceEnd[i].store(0);}
   if(data_dir){
-    std::string p(data_dir);if(!p.empty()&&p.back()!='/')p+='/';p+="breaks/break01.wav";
-    if(load_wav(p.c_str(),e->sample)){
-      e->status="break01.wav READY";
-      const int total=(int)e->sample.l.size();
-      for(int i=0;i<16;i++){e->sliceStart[i].store((int)((long long)total*i/16));e->sliceEnd[i].store((int)((long long)total*(i+1)/16));}
-      // Analyze off the audio thread and map detected attacks to 16 playable regions.
-      bl90::Onset onsets[64];
-      // Use the left channel as the analysis source to avoid a second full-size
-      // allocation on the memory-constrained MPC Live Gen1.
-      const int found=bl90::detect_onsets(e->sample.l.data(),total,e->sample.sampleRate,0.55f,24,onsets,64);
-      if(found>=15){
-        int prev=0; bool valid=true;
-        for(int i=1;i<16;i++){
-          const int pick=((i-1)*(found-1))/14;
-          int boundary=onsets[std::min(found-1,pick)].frame;
-          boundary=std::max(prev+128,std::min(total-(16-i)*128,boundary));
-          if(boundary<=prev){valid=false;break;}
-          e->sliceEnd[i-1].store(boundary); e->sliceStart[i].store(boundary); prev=boundary;
-        }
-        if(valid){e->sliceStart[0].store(0);e->sliceEnd[15].store(total);}
-        else for(int i=0;i<16;i++){e->sliceStart[i].store((int)((long long)total*i/16));e->sliceEnd[i].store((int)((long long)total*(i+1)/16));}
-      }
+    std::string folder(data_dir);if(!folder.empty()&&folder.back()!='/')folder+='/';folder+="breaks/";
+    size_t used=0;
+    for(int bank=0;bank<bl90::BANK_COUNT;bank++){
+      BankSlot& slot=e->bank[bank];
+      const std::string path=folder+bl90::BANK_FILES[bank];
+      // All file I/O, allocation and onset analysis happen only at instance creation.
+      // Switching presets is then a pointer swap plus cached boundary stores.
+      if(load_wav(path.c_str(),slot.sample,bl90::MAX_DECODED_FRAMES-used)){
+        used+=slot.sample.l.size();prepare_bank(slot);
+      }else slot.sample=Sample(); // release partial/failed allocations before loading another slot
     }
-    for(int i=0;i<16;i++){e->baseStart[i]=e->sliceStart[i].load();e->baseEnd[i]=e->sliceEnd[i].load();}
+    // Force applying slot zero's precomputed bounds on the initial selection.
+    e->selectedBank=-1;
+    if(!select_bank(e,0)){e->selectedBank=0;std::snprintf(e->status,sizeof(e->status),"NO WAV: add breaks/break01.wav");}
   }
   return e;
 }
+static bool read_state_number(const char*&p,double&value){
+  while(std::isspace((unsigned char)*p))++p;
+  if(!*p)return false;
+  errno=0;char*end=nullptr;value=std::strtod(p,&end);
+  if(end==p||errno==ERANGE||!std::isfinite(value))return false;
+  p=end;return true;
+}
+static bool state_int(const char*&p,int&value,int low,int high){
+  double x;if(!read_state_number(p,x)||x<low||x>high||x!=std::floor(x))return false;
+  value=(int)x;return true;
+}
+static bool restore_state(Engine*e,const char*text){
+  const char marker[]="BL90STATE1 ";
+  if(std::strncmp(text,marker,sizeof(marker)-1))return false;
+  const char*p=text+sizeof(marker)-1;
+  int bank,layout,root,stride;
+  if(!state_int(p,bank,0,bl90::BANK_COUNT-1)||!state_int(p,layout,0,4)||
+     !state_int(p,root,0,127)||!state_int(p,stride,4,12))return false;
+  const int total=(int)e->bank[bank].sample.l.size();if(total<=0)return false;
+  const double lows[9]={0,-24,0,0,4,0,0,0,0}, highs[9]={15,24,1,2,16,1,1,1,2};
+  float value[9];
+  for(int i=0;i<9;i++){double x;if(!read_state_number(p,x)||x<lows[i]||x>highs[i])return false;value[i]=(float)x;}
+  int start[16],end[16];
+  for(int i=0;i<16;i++){
+    if(!state_int(p,start[i],0,total-1)||!state_int(p,end[i],1,total)||end[i]<=start[i]||
+       (i&&start[i]<end[i-1]))return false;
+  }
+  while(std::isspace((unsigned char)*p))++p;if(*p)return false;
+  // Parse and validate every field before changing the live engine.
+  select_bank(e,bank);silence_voices(e);
+  e->padMap.store(bl90::pack_pad_map(layout,root,stride));e->padLearnStage.store(0);e->padLearnRoot.store(-1);
+  e->slice=value[0];e->pitch=value[1];e->reverse=value[2];e->mode=value[3];e->bits=value[4];
+  e->rate=value[5];e->cutoff=value[6];e->volume=value[7];e->interpolation=value[8];e->undoValid=false;
+  for(int i=0;i<16;i++){e->sliceStart[i].store(start[i]);e->sliceEnd[i].store(end[i]);}
+  return true;
+}
+static int save_state(Engine*e,char*b,int n){
+  const unsigned map=e->padMap.load();
+  int used=std::snprintf(b,n,"BL90STATE1 %d %d %d %d %.9g %.9g %.9g %.9g %.9g %.9g %.9g %.9g %.9g",
+    e->selectedBank,bl90::map_layout(map),bl90::map_root(map),bl90::map_stride(map),
+    e->slice,e->pitch,e->reverse,e->mode,e->bits,e->rate,e->cutoff,e->volume,e->interpolation);
+  if(used<0||used>=n){b[0]=0;return 0;}
+  for(int i=0;i<16;i++){
+    const int count=std::snprintf(b+used,n-used," %d %d",e->sliceStart[i].load(),e->sliceEnd[i].load());
+    if(count<0||count>=n-used){b[0]=0;return 0;}used+=count;
+  }
+  return 1;
+}
 static void destroy_engine(void*p){delete (Engine*)p;}
-static void midi_engine(void*p,const uint8_t*m,int n){if(!p||!m||n<3)return;Engine*e=(Engine*)p;int st=m[0]&0xf0,note=m[1],vel=m[2];if(st==0x90&&vel>0&&note>=36&&note<=51){int sl=note-36;e->heldSlice=sl;start_voice(e,sl,vel/127.f);}else if(st==0x90&&vel>0&&note==60){int sl=std::max(0,std::min(15,(int)std::round(e->slice)));e->heldSlice=sl;start_voice(e,sl,vel/127.f);}else if((st==0x90&&vel==0)||st==0x80){/* one-shot slices: note-off deliberately does not choke */}}
+static void midi_engine(void*p,const uint8_t*m,int n){
+  if(!p||!m||n<3)return;
+  Engine*e=(Engine*)p;
+  const int st=m[0]&0xf0, note=m[1], vel=m[2];
+  if(st!=0x90||vel<=0||note>127)return; // one-shot slices ignore note-off
+  e->lastMidiNote.store(note);
+  const int stage=e->padLearnStage.load();
+  if(stage==1){e->padLearnRoot.store(note);e->padLearnStage.store(2);return;}
+  if(stage==2){
+    const int root=e->padLearnRoot.load(), stride=note-root;
+    if(bl90::valid_chromatic_map(root,stride)){
+      e->padMap.store(bl90::pack_pad_map(bl90::ChromaticPads,root,stride));
+      e->padChanged.fetch_or(7u); // wrapper reports the three learned controls
+      e->padLearnStage.store(3);
+    }else e->padLearnStage.store(4); // retain the complete previous map
+    return;
+  }
+  if(stage>=3)e->padLearnStage.store(0);
+  const unsigned map=e->padMap.load();
+  int sl=bl90::note_to_pad(bl90::map_layout(map),bl90::map_root(map),note,bl90::map_stride(map));
+  // A mapped pad always wins: note 60 can be a physical pad in other layouts.
+  // The historical audition note remains available when it is outside the map.
+  if(sl<0&&note==60)sl=std::max(0,std::min(15,(int)std::round(e->slice)));
+  if(sl>=0){e->heldSlice=sl;start_voice(e,sl,vel/127.f);}
+}
 static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)return;Engine*e=(Engine*)p;float x=(float)std::atof(v);
+ if(!std::strcmp(k,"state")){restore_state(e,v);return;}
+ if(!std::strcmp(k,"break_select")){
+   if(std::isfinite(x))select_bank(e,(int)std::round(std::max(0.f,std::min((float)(bl90::BANK_COUNT-1),x))));
+   return;
+ }
 #define SET(name,field,lo,hi) if(!std::strcmp(k,name)){e->field=std::max((float)(lo),std::min((float)(hi),x));return;}
+ if(!std::strcmp(k,"pad_learn")){
+   if(x>.5f){e->padLearnRoot.store(-1);e->padLearnStage.store(1);}
+   return; // ignore the host's momentary release; learning needs two pad hits
+ }
+ if(!std::strcmp(k,"pad_layout")||!std::strcmp(k,"pad_root")||!std::strcmp(k,"pad_stride")){
+   if(!std::isfinite(x))return;
+   const bool layout=!std::strcmp(k,"pad_layout"), root=!std::strcmp(k,"pad_root");
+   const int value=(int)std::round(std::max(layout?0.f:root?0.f:4.f,std::min(layout?4.f:root?127.f:12.f,x)));
+   unsigned old=e->padMap.load(), changed;
+   do{
+     changed=bl90::pack_pad_map(layout?value:bl90::map_layout(old),root?value:bl90::map_root(old),!layout&&!root?value:bl90::map_stride(old));
+   }while(!e->padMap.compare_exchange_weak(old,changed));
+   return;
+ }
  SET("slice",slice,0,15)
  if(!std::strcmp(k,"slice_start")||!std::strcmp(k,"slice_end")){
-   const int total=(int)e->sample.l.size();
+   const int total=(int)e->sample->l.size();
    if(total>0){
      const int sl=std::max(0,std::min(15,(int)std::round(e->slice)));
      const int minGap=std::max(8,std::min(128,total/32));
@@ -147,7 +281,7 @@ static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)ret
        const int lower=e->sliceStart[sl].load()+minGap;
        const int upper=sl<15?e->sliceStart[sl+1].load()-minGap:total;
        frame=std::max(lower,std::min(upper,frame));
-       if(frame!=oldEnd){e->undoStart[sl]=oldStart;e->undoEnd[sl]=oldEnd;e->undoValid=true;e->sliceEnd[sl].store(frame);}
+       if(frame!=oldEnd){e->undoStart[sl]=oldStart;e->undoEnd[sl]=oldEnd;e->undoSlice=sl;e->undoValid=true;e->sliceEnd[sl].store(frame);}
      }
    }
    return;
@@ -157,10 +291,28 @@ static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)ret
 #undef SET
 }
 static int get_param_engine(void*p,const char*k,char*b,int n){if(!p||!k||!b||n<2)return 0;Engine*e=(Engine*)p;float x=0;
+ if(!std::strcmp(k,"state"))return save_state(e,b,n);
+ if(!std::strcmp(k,"break_select")){std::snprintf(b,n,"%d",e->selectedBank);return 1;}
 #define GET(name,field) if(!std::strcmp(k,name)){x=e->field;std::snprintf(b,n,"%.3f",x);return 1;}
+ if(!std::strcmp(k,"midi_note")){
+   const int stage=e->padLearnStage.load(), note=e->lastMidiNote.load();
+   const unsigned map=e->padMap.load();
+   if(stage==1)std::snprintf(b,n,"HIT PAD 1");
+   else if(stage==2)std::snprintf(b,n,"HIT PAD 5");
+   else if(stage==3)std::snprintf(b,n,"OK ROOT%d ROW%d",bl90::map_root(map),bl90::map_stride(map));
+   else if(stage==4)std::snprintf(b,n,"BAD ROW; RETRY");
+   else if(note<0)std::snprintf(b,n,"--");else std::snprintf(b,n,"%d",note);
+   return 1;
+ }
+ if(!std::strcmp(k,"pad_learn")){std::snprintf(b,n,"0");return 1;}
+ if(!std::strcmp(k,"pad_layout")||!std::strcmp(k,"pad_root")||!std::strcmp(k,"pad_stride")){
+   const unsigned map=e->padMap.load();
+   const int value=!std::strcmp(k,"pad_layout")?bl90::map_layout(map):!std::strcmp(k,"pad_root")?bl90::map_root(map):bl90::map_stride(map);
+   std::snprintf(b,n,"%d",value);return 1;
+ }
  GET("slice",slice)
  if(!std::strcmp(k,"slice_start")||!std::strcmp(k,"slice_end")){
-   const int total=(int)e->sample.l.size();
+   const int total=(int)e->sample->l.size();
    const int sl=std::max(0,std::min(15,(int)std::round(e->slice)));
    const int frame=!std::strcmp(k,"slice_start")?e->sliceStart[sl].load():e->sliceEnd[sl].load();
    const int baseA=e->baseStart[sl], baseB=e->baseEnd[sl];
@@ -170,7 +322,7 @@ static int get_param_engine(void*p,const char*k,char*b,int n){if(!p||!k||!b||n<2
  if(!std::strcmp(k,"undo")){std::snprintf(b,n,"0");return 1;}
  GET("interpolation",interpolation) GET("pitch",pitch) GET("reverse",reverse) GET("mode",mode) GET("bits",bits) GET("rate",rate) GET("cutoff",cutoff) GET("volume",volume)
 #undef GET
- if(!std::strcmp(k,"status")){std::snprintf(b,n,"%s",e->status.c_str());return 1;}return 0;}
+ if(!std::strcmp(k,"status")){std::snprintf(b,n,"%s",e->status);return 1;}return 0;}
 static void render_engine(void *p, int16_t *out, int frames) {
   Engine *e = (Engine *)p;
   if (!e || !out || frames <= 0) return;
@@ -183,7 +335,7 @@ static void render_engine(void *p, int16_t *out, int frames) {
   // playback clock without pretending to be cycle-accurate hardware emulation.
   const int hold = e->mode > 1.5f ? 1 + (int)std::round(e->rate * 5.0f)
                  : e->mode > .5f ? 1 + (int)(e->rate * 23.0f) : 1;
-  const double pitchStep = std::pow(2.0, e->pitch / 12.0) * (e->sample.sampleRate / 44100.0);
+  const double pitchStep = std::pow(2.0, e->pitch / 12.0) * (e->sample->sampleRate / 44100.0);
 
   for (int i = 0; i < frames; ++i) {
     float l = 0.0f, r = 0.0f;
@@ -195,7 +347,7 @@ static void render_engine(void *p, int16_t *out, int frames) {
       // Check the slice boundary before reading: reverse playback below the
       // slice start must never leak a frame from the preceding slice.
       if (v.pos < (double)lo || v.pos >= (double)hi ||
-          v.pos >= (double)e->sample.l.size()) {
+          v.pos >= (double)e->sample->l.size()) {
         v.on = false;
         continue;
       }
@@ -206,13 +358,13 @@ static void render_engine(void *p, int16_t *out, int frames) {
       const int ixm=std::max(lo,ix-1), ix2=std::min(hi-1,ix+2);
       float sl, sr;
       if(e->mode>1.5f || e->interpolation<0.5f){
-        sl=e->sample.l[ix]; sr=e->sample.r[ix];
+        sl=e->sample->l[ix]; sr=e->sample->r[ix];
       } else if(e->interpolation>1.5f){
-        sl=bl90::cubic4(e->sample.l[ixm],e->sample.l[ix],e->sample.l[ix1],e->sample.l[ix2],frac);
-        sr=bl90::cubic4(e->sample.r[ixm],e->sample.r[ix],e->sample.r[ix1],e->sample.r[ix2],frac);
+        sl=bl90::cubic4(e->sample->l[ixm],e->sample->l[ix],e->sample->l[ix1],e->sample->l[ix2],frac);
+        sr=bl90::cubic4(e->sample->r[ixm],e->sample->r[ix],e->sample->r[ix1],e->sample->r[ix2],frac);
       } else {
-        sl=e->sample.l[ix]+(e->sample.l[ix1]-e->sample.l[ix])*frac;
-        sr=e->sample.r[ix]+(e->sample.r[ix1]-e->sample.r[ix])*frac;
+        sl=e->sample->l[ix]+(e->sample->l[ix1]-e->sample->l[ix])*frac;
+        sr=e->sample->r[ix]+(e->sample->r[ix1]-e->sample->r[ix])*frac;
       }
 
       const double fromStart = v.direction > 0 ? v.pos - v.begin : (v.end - 1) - v.pos;
@@ -254,3 +406,20 @@ static void render_engine(void *p, int16_t *out, int frames) {
 }
 static const mpc_engine_t ENGINE={create_engine,destroy_engine,midi_engine,set_param_engine,get_param_engine,render_engine,nullptr,nullptr};
 extern "C" const mpc_engine_t* mpc_engine(void){return &ENGINE;}
+
+// The wrapper drains engine-originated changes and reports current values to the
+// host. Fixed bits and static names keep calibration notifications allocation-free.
+extern "C" int mpc_engine_changed(void*p,char*key,int len){
+  if(!p||!key||len<11)return 0;
+  Engine*e=(Engine*)p;
+  unsigned pending=e->padChanged.load();
+  while(pending){
+    const unsigned bit=pending&(~pending+1u);
+    if(e->padChanged.compare_exchange_weak(pending,pending&~bit)){
+      const char*name=bit==1u?"pad_layout":bit==2u?"pad_root":"pad_stride";
+      std::memcpy(key,name,std::strlen(name)+1);
+      return 1;
+    }
+  }
+  return 0;
+}

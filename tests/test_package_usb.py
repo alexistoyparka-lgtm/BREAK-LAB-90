@@ -55,10 +55,24 @@ class PackageTests(unittest.TestCase):
     def test_parameter_indices_and_identity_stay_locked(self):
         expected = ['slice', 'pitch', 'reverse', 'mode', 'bits', 'rate',
                     'cutoff', 'volume', 'status', 'interpolation',
-                    'slice_start', 'slice_end', 'undo']
+                    'slice_start', 'slice_end', 'undo', 'pad_layout', 'pad_root',
+                    'pad_stride', 'pad_learn', 'midi_note', 'break_select']
         self.assertEqual((ROOT / 'params.lock').read_text().splitlines(), expected)
         self.assertEqual([p['key'] for p in json.loads((ROOT / 'vst/params.json').read_text())['params']], expected)
         self.assertEqual(json.loads((ROOT / 'vst.json').read_text())['uid'], 'Brk9')
+
+    def test_ten_selected_breaks_reach_both_distributions(self):
+        manifest = json.loads(self.original[self.top + '/mpc-plugin.json'])
+        if manifest['version'] == '0.2.0':
+            self.skipTest('historical archive has no added sample bank')
+        manager, sdk = pkg.package(SOURCE, self.out)
+        m, s = pkg.read_zip(manager), pkg.read_zip(sdk)
+        bank = json.loads(m[self.pre + 'engine/breaks/bank.json'])['selection']
+        self.assertEqual(len(bank), 10)
+        for entry in bank:
+            relative = 'engine/breaks/' + entry['file']
+            for archive, prefix in [(m, self.pre), (s, pkg.FOLDER + '/')]:
+                self.assertEqual(pkg.digest(archive[prefix + relative]), entry['sha256'])
 
     def test_tampered_payload_rejected(self):
         data = dict(self.original)

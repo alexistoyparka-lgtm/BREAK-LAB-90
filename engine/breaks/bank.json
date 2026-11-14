@@ -1,0 +1,118 @@
+{
+  "schema": 1,
+  "description": "User-provided sample selection; creative names, not identification of original recordings. WAV bytes preserved without normalization or resampling.",
+  "source_archive": "Archive.zip",
+  "source_archive_sha256": "dfe61efa4f31435ae1e4a6f99583daaa14d336700513dd0d9aa296da6b813d15",
+  "selection": [
+    {
+      "index": 1,
+      "name": "Warehouse Run",
+      "file": "warehouse_run.wav",
+      "source": "22 Track 22_001.wav",
+      "sha256": "54c904270126eea373bdec2ec4a74a70810b777e45da64a2a2563f854bd6b4cf",
+      "frames": 244126,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "index": 2,
+      "name": "Chrome Break",
+      "file": "chrome_break.wav",
+      "source": "13 Track 13_002.wav",
+      "sha256": "e5597d7b4aa7ef8f148d9009cae9633a76ce10fbc42e411051997f0cdaed188d",
+      "frames": 111527,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "index": 3,
+      "name": "Redline Break",
+      "file": "redline_break.wav",
+      "source": "13 Track 13_004.wav",
+      "sha256": "a31c766e994b3639c9ebc80c4e6a85d708920de60693ccb31bd75577e4008378",
+      "frames": 92396,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "index": 4,
+      "name": "Neon Shuffle",
+      "file": "neon_shuffle.wav",
+      "source": "13 Track 13_005.wav",
+      "sha256": "36ed5f3ab0c2c7ddeeaa188483129ad646c8cdba77387a6477586c0d8dfc292e",
+      "frames": 156059,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "index": 5,
+      "name": "Dust Circuit",
+      "file": "dust_circuit.wav",
+      "source": "13 Track 13_006.wav",
+      "sha256": "10a2c7d89ebbea08fff2ed0ad35fb8e728d7f07b7d6f5b94064e3c3a02b3eb58",
+      "frames": 103933,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "index": 6,
+      "name": "Razor Step",
+      "file": "razor_step.wav",
+      "source": "13 Track 13_008.wav",
+      "sha256": "efcbd725a0e662a21de167f4182e3c7c48d5aecadf1c980a716178b7e53c5dea",
+      "frames": 111450,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "index": 7,
+      "name": "Basement Snap",
+      "file": "basement_snap.wav",
+      "source": "13 Track 13_011.wav",
+      "sha256": "e8c229ba60518c1fc22a7b72a14c486695bcee1fe18e2f49369cf0bc6ddcd48a",
+      "frames": 121405,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "index": 8,
+      "name": "Ghost Runner",
+      "file": "ghost_runner.wav",
+      "source": "13 Track 13_013.wav",
+      "sha256": "16dc56d9f805162931cb7a6ca8418f3f155ccf0f7b2a5c8e5e403b72c834218b",
+      "frames": 154748,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "index": 9,
+      "name": "Concrete Swing",
+      "file": "concrete_swing.wav",
+      "source": "19 Track 19_006.wav",
+      "sha256": "3811dd9331612d0d743ebd2743f0520d18f6366602ec0d79169bfec34d0c16c6",
+      "frames": 139774,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "index": 10,
+      "name": "Subway Funk",
+      "file": "subway_funk.wav",
+      "source": "19 Track 19_009.wav",
+      "sha256": "8e4a9cda6e007031c3fa05e882cd8f3eb429c71a183486182b303e1fcc65df30",
+      "frames": 126303,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    }
+  ]
+}

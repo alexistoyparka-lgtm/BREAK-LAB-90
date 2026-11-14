@@ -2,7 +2,7 @@ name: Build BREAK LAB 90
 
 on:
   push:
-    branches: [main, amiga-sampler-next, fix/restore-usb-package]
+    branches: [main, amiga-sampler-next, fix/restore-usb-package, feat/mpc-pads-break-bank-retro]
     paths:
       - "vst.json"
       - "params.lock"
@@ -20,15 +20,15 @@ jobs:
   build-armv7:
     uses: open-mpc/mpc-vst-plugins/.github/workflows/vst-release.yml@11d340572dcc93778f341a9484c5ae6c51126abe
     with:
-      tag: break-lab-90-v0.2.0-rc1
-      version: "0.2.0"
+      tag: break-lab-90-v0.2.1-rc1
+      version: "0.2.1"
       tools_ref: 11d340572dcc93778f341a9484c5ae6c51126abe
       vst_dir: .
       build: '"$MPC_VST/tools/build_port.sh" vst.json armv7'
-      host_test: '"$MPC_VST/tools/test_port.sh" vst.json && bash tests/run_engine_smoke.sh'
+      host_test: 'bash tests/run_wrapper_tests.sh && bash tests/run_engine_smoke.sh && bash tests/run_pad_mapping.sh && bash tests/run_sample_bank.sh && python3 tests/test_bank_assets.py'
       extra: engine/breaks:engine/breaks
       user_data: engine
-      about: "Amiga-inspired breakbeat sampler for MPC Live Gen1; includes transient slicing and selectable Paula-style playback interpolation."
+      about: "Amiga-inspired breakbeat sampler for MPC Live Gen1; includes ten selected breaks, calibrated pad order and a tracker-inspired interface."
       dry_run: true
 
   package-usb:
@@ -40,22 +40,25 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: break-lab-90-v0.2.0-rc1
+          name: break-lab-90-v0.2.1-rc1
           path: upstream
       - name: Test and package USB and Plugin Manager distributions
         run: |
-          source=upstream/dist/BREAK-LAB-90-0.2.0-mpc-armv7.zip
+          source=upstream/dist/BREAK-LAB-90-0.2.1-mpc-armv7.zip
           python3 tests/test_package_usb.py "$source"
           python3 tools/package_usb.py "$source" dist
+          cp -R upstream/previews previews
           cd dist
           sha256sum *.zip > SHA256SUMS
       - name: Upload both tested distributions
         uses: actions/upload-artifact@v4
         with:
-          name: break-lab-90-v0.2.0-usb-candidate
+          name: break-lab-90-v0.2.1-usb-candidate
           path: |
             dist/*.zip
             dist/SHA256SUMS
+            previews/
             docs/INSTALL_USB_FR.md
             docs/USB_PACKAGING_AUDIT.md
+            docs/PADS_BANK_RETRO_FR.md
           retention-days: 14

@@ -10,7 +10,8 @@
         "bits": 16,
         "rate": 0,
         "cutoff": 1,
-        "volume": 0.85
+        "volume": 0.85,
+        "break_select": 0
       }
     },
     {
@@ -23,7 +24,8 @@
         "bits": 12,
         "rate": 0.28,
         "cutoff": 0.78,
-        "volume": 0.85
+        "volume": 0.85,
+        "break_select": 0
       }
     },
     {
@@ -36,7 +38,8 @@
         "bits": 16,
         "rate": 0,
         "cutoff": 0.34,
-        "volume": 0.85
+        "volume": 0.85,
+        "break_select": 0
       }
     },
     {
@@ -49,7 +52,8 @@
         "bits": 10,
         "rate": 0.42,
         "cutoff": 0.62,
-        "volume": 0.82
+        "volume": 0.82,
+        "break_select": 0
       }
     },
     {
@@ -63,7 +67,158 @@
         "rate": 0.18,
         "cutoff": 0.74,
         "volume": 0.85,
-        "interpolation": "Paula Hold"
+        "interpolation": "Paula Hold",
+        "break_select": 0
+      }
+    },
+    {
+      "name": "Warehouse Run",
+      "values": {
+        "slice": 0,
+        "pitch": 0,
+        "reverse": "Forward",
+        "mode": "Clean",
+        "bits": 16,
+        "rate": 0,
+        "cutoff": 1,
+        "volume": 0.85,
+        "interpolation": "Linear",
+        "break_select": 1
+      }
+    },
+    {
+      "name": "Chrome Break",
+      "values": {
+        "slice": 0,
+        "pitch": 0,
+        "reverse": "Forward",
+        "mode": "Clean",
+        "bits": 16,
+        "rate": 0,
+        "cutoff": 1,
+        "volume": 0.85,
+        "interpolation": "Linear",
+        "break_select": 2
+      }
+    },
+    {
+      "name": "Redline Break",
+      "values": {
+        "slice": 0,
+        "pitch": 0,
+        "reverse": "Forward",
+        "mode": "Clean",
+        "bits": 16,
+        "rate": 0,
+        "cutoff": 1,
+        "volume": 0.85,
+        "interpolation": "Linear",
+        "break_select": 3
+      }
+    },
+    {
+      "name": "Neon Shuffle",
+      "values": {
+        "slice": 0,
+        "pitch": 0,
+        "reverse": "Forward",
+        "mode": "Clean",
+        "bits": 16,
+        "rate": 0,
+        "cutoff": 1,
+        "volume": 0.85,
+        "interpolation": "Linear",
+        "break_select": 4
+      }
+    },
+    {
+      "name": "Dust Circuit",
+      "values": {
+        "slice": 0,
+        "pitch": 0,
+        "reverse": "Forward",
+        "mode": "Clean",
+        "bits": 16,
+        "rate": 0,
+        "cutoff": 1,
+        "volume": 0.85,
+        "interpolation": "Linear",
+        "break_select": 5
+      }
+    },
+    {
+      "name": "Razor Step",
+      "values": {
+        "slice": 0,
+        "pitch": 0,
+        "reverse": "Forward",
+        "mode": "Clean",
+        "bits": 16,
+        "rate": 0,
+        "cutoff": 1,
+        "volume": 0.85,
+        "interpolation": "Linear",
+        "break_select": 6
+      }
+    },
+    {
+      "name": "Basement Snap",
+      "values": {
+        "slice": 0,
+        "pitch": 0,
+        "reverse": "Forward",
+        "mode": "Clean",
+        "bits": 16,
+        "rate": 0,
+        "cutoff": 1,
+        "volume": 0.85,
+        "interpolation": "Linear",
+        "break_select": 7
+      }
+    },
+    {
+      "name": "Ghost Runner",
+      "values": {
+        "slice": 0,
+        "pitch": 0,
+        "reverse": "Forward",
+        "mode": "Clean",
+        "bits": 16,
+        "rate": 0,
+        "cutoff": 1,
+        "volume": 0.85,
+        "interpolation": "Linear",
+        "break_select": 8
+      }
+    },
+    {
+      "name": "Concrete Swing",
+      "values": {
+        "slice": 0,
+        "pitch": 0,
+        "reverse": "Forward",
+        "mode": "Clean",
+        "bits": 16,
+        "rate": 0,
+        "cutoff": 1,
+        "volume": 0.85,
+        "interpolation": "Linear",
+        "break_select": 9
+      }
+    },
+    {
+      "name": "Subway Funk",
+      "values": {
+        "slice": 0,
+        "pitch": 0,
+        "reverse": "Forward",
+        "mode": "Clean",
+        "bits": 16,
+        "rate": 0,
+        "cutoff": 1,
+        "volume": 0.85,
+        "interpolation": "Linear",
+        "break_select": 10
       }
     }
   ]

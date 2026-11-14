@@ -1,10 +1,24 @@
-/* BREAK LAB 90 — dark graphite, warm amber and cool steel. */
+/* Red waveform, silver bezels and dark tracker-era controls. Native MPC values
+   stay large and legible; the pixel title and chassis lettering live in SVG. */
 :root {
-  --seg-size: 18px;
+  --font: "DejaVu Sans Mono", monospace;
+  --title-font: var(--font);
+  --label-size: 12px;
+  --seg-size: 15px;
+  --button-size: 14px;
+  --radius: 0px;
   --sheen: 0;
   --shadow: none;
 }
-.seg-tx {
-  font-weight: 700;
-  letter-spacing: 0.055em;
-}
+.seg-bg { stroke: #878e7f; stroke-width: 1; }
+.seg-tx { font-weight: 700; letter-spacing: 0.07em; }
+.seg-sheen { fill: none; }
+.box { fill: #11140f; stroke: #737d65; stroke-width: 1; }
+.box-label { fill: #a3aa99; font-family: var(--font); font-size: 11px; letter-spacing: .08em; }
+.arrow-bg { fill: #33382d; stroke: #777e6b; stroke-width: 1; }
+.arrow { fill: #d3dcc5; }
+.knob-track { stroke: #060706; stroke-width: 3; }
+.knob-arc { stroke: #ff424a; stroke-width: 3; }
+.look-metal { stroke: #8d9584; }
+.look-metal-top { fill: #bfc6b6; }
+.look-notch { stroke: #151914; }
