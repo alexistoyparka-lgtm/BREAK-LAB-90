@@ -1,0 +1,10 @@
+/* BREAK LAB 90 — dark graphite, warm amber and cool steel. */
+:root {
+  --seg-size: 18px;
+  --sheen: 0;
+  --shadow: none;
+}
+.seg-tx {
+  font-weight: 700;
+  letter-spacing: 0.055em;
+}
