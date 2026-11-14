@@ -339,6 +339,35 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // Starting a second voice must not reset the shared Vintage sample-hold phase.
+    // Both engines begin with the same held sample; retriggering one engine between
+    // decimator ticks must not change its next output frame.
+    void *hold_phase_ref = api->create(dir);
+    void *hold_phase_retrigger = api->create(dir);
+    if (!hold_phase_ref || !hold_phase_retrigger) return 1;
+    api->set_param(hold_phase_ref, "mode", "1");
+    api->set_param(hold_phase_retrigger, "mode", "1");
+    api->set_param(hold_phase_ref, "rate", "1");
+    api->set_param(hold_phase_retrigger, "rate", "1");
+    uint8_t hold_phase_note[3] = {0x90, 36, 100};
+    int16_t hold_phase_first_ref[2] = {}, hold_phase_first_retrigger[2] = {};
+    api->midi(hold_phase_ref, hold_phase_note, 3);
+    api->midi(hold_phase_retrigger, hold_phase_note, 3);
+    api->render(hold_phase_ref, hold_phase_first_ref, 1);
+    api->render(hold_phase_retrigger, hold_phase_first_retrigger, 1);
+    api->midi(hold_phase_retrigger, hold_phase_note, 3);
+    int16_t hold_phase_next_ref[2] = {}, hold_phase_next_retrigger[2] = {};
+    api->render(hold_phase_ref, hold_phase_next_ref, 1);
+    api->render(hold_phase_retrigger, hold_phase_next_retrigger, 1);
+    api->destroy(hold_phase_ref);
+    api->destroy(hold_phase_retrigger);
+    if (hold_phase_next_ref[0] != hold_phase_next_retrigger[0] ||
+        hold_phase_next_ref[1] != hold_phase_next_retrigger[1]) {
+        fprintf(stderr, "new voice reset the shared Vintage sample-hold phase: ref=%d retrigger=%d\\n",
+                hold_phase_next_ref[0], hold_phase_next_retrigger[0]);
+        return 1;
+    }
+
     // Mono PCM at 44.1 kHz is also a supported source format.
     if (!make_wav(breaks + "/break01.wav", 44100, 1)) return 1;
     engine = api->create(dir);
