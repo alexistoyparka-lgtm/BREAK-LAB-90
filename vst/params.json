@@ -76,6 +76,16 @@
       "min": 0,
       "max": 1,
       "default": 0
+    },
+    {
+      "key": "interpolation",
+      "name": "Resampling",
+      "options": [
+        "Paula Hold",
+        "Linear",
+        "Cubic"
+      ],
+      "default": 1
     }
   ],
   "sections": [
@@ -84,7 +94,8 @@
       "keys": [
         "slice",
         "pitch",
-        "reverse"
+        "reverse",
+        "interpolation"
       ]
     },
     {
