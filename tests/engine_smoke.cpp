@@ -365,6 +365,26 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // The new interpolation selector must change the rendered signal at fractional pitch.
+    void *hold_engine = api->create(dir);
+    void *cubic_engine = api->create(dir);
+    if (!hold_engine || !cubic_engine) return 1;
+    api->set_param(hold_engine, "interpolation", "0");
+    api->set_param(cubic_engine, "interpolation", "2");
+    api->set_param(hold_engine, "pitch", "0.37");
+    api->set_param(cubic_engine, "pitch", "0.37");
+    uint8_t interp_note[3] = {0x90, 36, 100};
+    int16_t hold_out[128 * 2] = {}, cubic_out[128 * 2] = {};
+    api->midi(hold_engine, interp_note, 3); api->render(hold_engine, hold_out, 128);
+    api->midi(cubic_engine, interp_note, 3); api->render(cubic_engine, cubic_out, 128);
+    long interpolation_difference = 0;
+    for (int i = 0; i < 256; ++i) interpolation_difference += abs((int)hold_out[i] - (int)cubic_out[i]);
+    api->destroy(hold_engine); api->destroy(cubic_engine);
+    if (interpolation_difference < 100) {
+        fprintf(stderr, "Paula Hold and Cubic interpolation did not produce distinct output: %ld\\n", interpolation_difference);
+        return 1;
+    }
+
     // A PCM file with an inconsistent byte rate must be rejected.
     if (!make_bad_byte_rate_wav(breaks + "/break01.wav")) return 1;
     engine = api->create(dir);
@@ -392,6 +412,6 @@ int main(int argc, char **argv) {
     unlink((breaks + "/break01.wav").c_str());
     rmdir(breaks.c_str());
     rmdir(dir);
-    puts("PASS: bundled break loading, 48 kHz stereo channel separation, 44.1 kHz mono WAV loading and sample-rate conversion, click-safe fade-in, all 16 MIDI slices, eight-voice polyphony and voice stealing, filter cutoff, master volume and velocity scaling, Vintage bit-depth/rate crushing, pitch playback/clamping, selected-slice audition, reverse playback direction and malformed RIFF/PCM metadata rejection");
+    puts("PASS: bundled break loading, 48 kHz stereo channel separation, 44.1 kHz mono WAV loading and sample-rate conversion, click-safe fade-in, all 16 MIDI slices, eight-voice polyphony and voice stealing, filter cutoff, master volume and velocity scaling, Vintage bit-depth/rate crushing, pitch playback/clamping, selected-slice audition, reverse playback direction, selectable Paula Hold/Linear/Cubic interpolation and malformed RIFF/PCM metadata rejection");
     return 0;
 }
