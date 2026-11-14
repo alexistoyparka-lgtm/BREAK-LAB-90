@@ -73,7 +73,7 @@
       "name": "Sample Status",
       "type": "readout",
       "display": "string",
-      "poll": false,
+      "poll": true,
       "min": 0,
       "max": 1,
       "default": 0
