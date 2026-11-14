@@ -51,6 +51,20 @@
         "cutoff": 0.62,
         "volume": 0.82
       }
+    },
+    {
+      "name": "Paula Jungle",
+      "values": {
+        "slice": 0,
+        "pitch": 0,
+        "reverse": "Forward",
+        "mode": "PAULA",
+        "bits": 8,
+        "rate": 0.18,
+        "cutoff": 0.74,
+        "volume": 0.85,
+        "interpolation": "Paula Hold"
+      }
     }
   ]
 }
