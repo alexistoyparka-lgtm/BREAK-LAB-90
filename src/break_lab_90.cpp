@@ -122,7 +122,7 @@ static void destroy_engine(void*p){delete (Engine*)p;}
 static void midi_engine(void*p,const uint8_t*m,int n){if(!p||!m||n<3)return;Engine*e=(Engine*)p;int st=m[0]&0xf0,note=m[1],vel=m[2];if(st==0x90&&vel>0&&note>=36&&note<=51){int sl=note-36;e->heldSlice=sl;start_voice(e,sl,vel/127.f);}else if(st==0x90&&vel>0&&note==60){int sl=std::max(0,std::min(15,(int)std::round(e->slice)));e->heldSlice=sl;start_voice(e,sl,vel/127.f);}else if((st==0x90&&vel==0)||st==0x80){/* one-shot slices: note-off deliberately does not choke */}}
 static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)return;Engine*e=(Engine*)p;float x=(float)std::atof(v);
 #define SET(name,field,lo,hi) if(!std::strcmp(k,name)){e->field=std::max((float)(lo),std::min((float)(hi),x));return;}
- SET("slice",slice,0,15) SET("interpolation",interpolation,0,2) SET("pitch",pitch,-24,24) SET("reverse",reverse,0,1) SET("mode",mode,0,1) SET("bits",bits,4,16) SET("rate",rate,0,1) SET("cutoff",cutoff,0,1) SET("volume",volume,0,1)
+ SET("slice",slice,0,15) SET("interpolation",interpolation,0,2) SET("pitch",pitch,-24,24) SET("reverse",reverse,0,1) SET("mode",mode,0,2) SET("bits",bits,4,16) SET("rate",rate,0,1) SET("cutoff",cutoff,0,1) SET("volume",volume,0,1)
 #undef SET
 }
 static int get_param_engine(void*p,const char*k,char*b,int n){if(!p||!k||!b||n<2)return 0;Engine*e=(Engine*)p;float x=0;
@@ -160,7 +160,7 @@ static void render_engine(void *p, int16_t *out, int frames) {
       const float frac = (float)(v.pos - ix);
       const int ixm=std::max(lo,ix-1), ix2=std::min(hi-1,ix+2);
       float sl, sr;
-      if(e->interpolation<0.5f){
+      if(e->mode>1.5f || e->interpolation<0.5f){
         sl=e->sample.l[ix]; sr=e->sample.r[ix];
       } else if(e->interpolation>1.5f){
         sl=bl90::cubic4(e->sample.l[ixm],e->sample.l[ix],e->sample.l[ix1],e->sample.l[ix2],frac);
