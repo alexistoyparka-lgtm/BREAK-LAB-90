@@ -27,7 +27,7 @@ This file separates automated host/build validation, package validation and phys
 | Pitch | Parameter round-trip, clamping and audible playback-rate change work | Passed |
 | Reverse | Reverse changes sample order and stays inside selected slice | Passed |
 | Slice edge fade | First output frame starts at silence; sample remains audible | Passed |
-| Factory presets | Five presets validate and appear in host preset list, including Paula Jungle | Pending final CI run |
+| Factory presets | Five presets validate and appear in host preset list, including Paula Jungle | Passed in CI run #91 |
 
 ## Package validation
 
