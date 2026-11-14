@@ -16,7 +16,9 @@ This file separates automated host/build validation, package validation and phys
 | Transient detector | Synthetic attack fixture returns ordered attack candidates | Pending CI |
 | Paula quantisation / cubic interpolation | Bounded quantisation and interpolation endpoint checks | Pending CI |
 | Automatic 16-slice remapping | At least 15 detected attacks produce 16 valid regions; otherwise equal-slice fallback | Pending CI |
-| Resampling selector | Paula Hold / Linear / Cubic parameter round-trip and audible output difference | Pending CI |
+| Resampling selector | Paula Hold / Linear / Cubic parameter round-trip and audible output difference | Passed in CI run #90 |
+| Custom MPC skin | PLAY and CHARACTER pages, Q-Link maps and preview generation | Passed in CI run #90 |
+| PAULA mode | Third mode option compiles and packages with the MPC skin | Passed in CI run #90 |
 | Polyphony | Eight voices overlap; ninth trigger steals a voice safely | Passed |
 | Selected slice audition | MIDI note 60 plays selected slice | Passed |
 | Filter / master volume | Controls alter rendered signal | Passed |
@@ -25,7 +27,7 @@ This file separates automated host/build validation, package validation and phys
 | Pitch | Parameter round-trip, clamping and audible playback-rate change work | Passed |
 | Reverse | Reverse changes sample order and stays inside selected slice | Passed |
 | Slice edge fade | First output frame starts at silence; sample remains audible | Passed |
-| Factory presets | Four presets validate and appear in host preset list | Passed |
+| Factory presets | Five presets validate and appear in host preset list, including Paula Jungle | Pending final CI run |
 
 ## Package validation
 
