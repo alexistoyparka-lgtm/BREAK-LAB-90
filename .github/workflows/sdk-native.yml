@@ -71,6 +71,6 @@ jobs:
         with:
           name: BREAK-LAB-90-INMUSIC-SDK-0.3.0-TEST1
           path: |
-            sdk/plugins/BreakLab90/build/*.zip
+            sdk/plugins/BreakLab90/dist/*.zip
             sdk/plugins/BreakLab90/build/OpenBench - VST - BREAK LAB 90/**
           if-no-files-found: error
