@@ -1,0 +1,76 @@
+name: Native inMusic SDK BREAK LAB 90
+on:
+  push:
+    branches:
+      - fix/clean-audio-path-v1
+    paths:
+      - 'sdk-port/**'
+      - 'src/**'
+      - 'engine/breaks/**'
+      - '.github/workflows/sdk-native.yml'
+  workflow_dispatch:
+
+jobs:
+  build-sdk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Checkout BREAK LAB 90
+        uses: actions/checkout@v4
+        with:
+          path: port
+      - name: Checkout inMusic SDK (pinned version)
+        uses: actions/checkout@v4
+        with:
+          repository: inmusic-software/mpc-plugin-builder-sdk
+          ref: febd2ca5bd9eb16c4a412837196e145566bc981b
+          path: sdk
+      - name: Prepare native SDK project, core and audio content
+        shell: bash
+        run: |
+          set -euxo pipefail
+          P=sdk/plugins/BreakLab90
+          mkdir -p "$P/src" "$P/Content/breaks"
+          cp port/sdk-port/plugin.json "$P/plugin.json"
+          cp port/sdk-port/ui.json "$P/ui.json"
+          cp port/sdk-port/BreakLab90.cpp "$P/src/BreakLab90.cpp"
+          cp port/sdk-port/engine.h "$P/src/engine.h"
+          cp port/src/break_lab_90.cpp "$P/src/engine_core.inc"
+          cp port/src/amiga_dsp.h port/src/hq_sinc.h "$P/src/"
+          cp port/engine/breaks/break01.wav "$P/Content/breaks/break01.wav"
+      - name: Build native, ARM32 and ARM64 with official inMusic SDK
+        working-directory: sdk
+        run: python3 tools/build.py plugins/BreakLab90 --target all --verbose
+      - name: Verify package structure and ARM32 binary
+        shell: bash
+        run: |
+          set -euxo pipefail
+          P='sdk/plugins/BreakLab90/build/OpenBench - VST - BREAK LAB 90'
+          test -s "$P/VST/break-lab-90-arm32.so"
+          test -s "$P/VST/break-lab-90-arm64.so"
+          test -s "$P/Plugin Skins/TUI.json"
+          test -s "$P/Plugin Skins/Q-Links.json"
+          test -s "$P/Content/breaks/break01.wav"
+          file "$P/VST/"*.so
+          python3 sdk/tools/validate.py "$P"
+      - name: Test native plugin in MPC host simulator
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd sdk
+          .sdk-tools/host_sim plugins/BreakLab90/build/native/break-lab-90.so test --seconds 12 --block 32
+      - name: Zip ready-to-copy plugin directory
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd sdk
+          python3 tools/package.py plugins/BreakLab90
+          find plugins/BreakLab90 -maxdepth 2 -type f | sort
+      - name: Upload test-ready MPC package
+        uses: actions/upload-artifact@v4
+        with:
+          name: BREAK-LAB-90-INMUSIC-SDK-0.3.0-TEST1
+          path: |
+            sdk/plugins/BreakLab90/build/*.zip
+            sdk/plugins/BreakLab90/build/OpenBench - VST - BREAK LAB 90/**
+          if-no-files-found: error
