@@ -1,0 +1,112 @@
+{
+  "kit": "amber",
+  "pages": [
+    {
+      "name": "PLAY",
+      "controls": [
+        {
+          "param": "Slice",
+          "widget": "knob"
+        },
+        {
+          "param": "Pitch",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "Direction",
+          "widget": "switch"
+        },
+        {
+          "param": "Volume",
+          "widget": "fader"
+        },
+        {
+          "param": "Resampling",
+          "widget": "switch"
+        },
+        {
+          "param": "Character",
+          "widget": "switch"
+        },
+        {
+          "param": "Filter",
+          "widget": "knob"
+        },
+        {
+          "param": "Rate Crush",
+          "widget": "knob"
+        }
+      ]
+    },
+    {
+      "name": "CHOP",
+      "controls": [
+        {
+          "param": "Slice",
+          "widget": "knob"
+        },
+        {
+          "param": "Slice Start",
+          "widget": "knob"
+        },
+        {
+          "param": "Slice End",
+          "widget": "knob"
+        },
+        {
+          "param": "Undo",
+          "widget": "switch"
+        },
+        {
+          "widget": "text",
+          "text": "Slice order: pads 1-16"
+        },
+        {
+          "widget": "text",
+          "text": "Start / End: precise edits"
+        }
+      ]
+    },
+    {
+      "name": "CHAR",
+      "controls": [
+        {
+          "param": "Character",
+          "widget": "switch"
+        },
+        {
+          "param": "Bits",
+          "widget": "knob"
+        },
+        {
+          "param": "Rate Crush",
+          "widget": "knob"
+        },
+        {
+          "param": "Filter",
+          "widget": "knob"
+        },
+        {
+          "param": "Pitch",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "Resampling",
+          "widget": "switch"
+        },
+        {
+          "param": "Volume",
+          "widget": "fader"
+        }
+      ]
+    }
+  ],
+  "style": {
+    "background": "ff101419",
+    "accent": "ffff9b36",
+    "text": "ffe7edf3",
+    "muted": "ff93a2b5"
+  }
+}
