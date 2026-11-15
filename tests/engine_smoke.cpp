@@ -422,6 +422,35 @@ int main(int argc, char **argv) {
     api->destroy(engine);
     if (!mono_energy) { fprintf(stderr, "mono WAV playback produced silence\n"); return 1; }
 
+    // Clean 44.1-kHz reference test: sample-rate matched, full-open filter,
+    // interpolation = linear, 127 velocity, unity gain. At integer positions
+    // the output must match the source PCM after the intentional edge fade.
+    // This test specifically catches accidentally processing Clean through a
+    // stale vintage sample-and-hold or a non-transparent low-pass filter.
+    if (!make_wav(breaks + "/break01.wav", 44100, 2)) return 1;
+    void *reference_clean = api->create(dir);
+    if (!reference_clean) return 1;
+    api->set_param(reference_clean, "mode", "0");
+    api->set_param(reference_clean, "cutoff", "1");
+    api->set_param(reference_clean, "volume", "1");
+    api->set_param(reference_clean, "interpolation", "1");
+    uint8_t reference_note[3] = {0x90, 36, 127};
+    int16_t reference_out[48 * 2] = {};
+    api->midi(reference_clean, reference_note, 3);
+    api->render(reference_clean, reference_out, 48);
+    for (int i = 10; i < 35; ++i) {
+        // 1600 frames / 16 slices = 100, fadeFrames=min(88,50).
+        const int16_t src = (int16_t)(1000 + i * 8);
+        const int expected = (int)std::lround((double)src * (double)i / 50.0 * (32767.0 / 32768.0));
+        if (std::abs((int)reference_out[i * 2] - expected) > 2 ||
+            std::abs((int)reference_out[i * 2 + 1] + expected) > 2) {
+            fprintf(stderr, "Clean PCM reference mismatch at %d: got L/R %d/%d expected %d/%d\\n",
+                    i, reference_out[i * 2], reference_out[i * 2 + 1], expected, -expected);
+            api->destroy(reference_clean); return 1;
+        }
+    }
+    api->destroy(reference_clean);
+
     // The loader must honor the source sample rate, not play every WAV at 44.1 kHz.
     long sample_rate_difference = 0;
     for (int i = 0; i < 128; ++i)
