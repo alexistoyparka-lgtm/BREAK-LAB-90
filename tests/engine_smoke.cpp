@@ -451,6 +451,34 @@ int main(int argc, char **argv) {
     }
     api->destroy(reference_clean);
 
+    // Switching back from rate-crushed Vintage must not contaminate Clean.
+    void *clean_fresh = api->create(dir);
+    void *clean_switched = api->create(dir);
+    if (!clean_fresh || !clean_switched) return 1;
+    api->set_param(clean_fresh, "volume", "1");
+    api->set_param(clean_switched, "volume", "1");
+    api->set_param(clean_switched, "mode", "1");
+    api->set_param(clean_switched, "rate", "1");
+    api->set_param(clean_switched, "bits", "4");
+    uint8_t mode_note[3] = {0x90, 36, 127};
+    int16_t vintage_preroll[128 * 2] = {};
+    api->midi(clean_switched, mode_note, 3);
+    api->render(clean_switched, vintage_preroll, 128);
+    api->set_param(clean_switched, "mode", "0");
+    int16_t fresh_pcm[48 * 2] = {}, switched_pcm[48 * 2] = {};
+    api->midi(clean_fresh, mode_note, 3);
+    api->midi(clean_switched, mode_note, 3);
+    api->render(clean_fresh, fresh_pcm, 48);
+    api->render(clean_switched, switched_pcm, 48);
+    for (int i = 0; i < 96; ++i) {
+        if (std::abs((int)fresh_pcm[i] - (int)switched_pcm[i]) > 1) {
+            fprintf(stderr, "Vintage-to-Clean leaked DSP state at frame %d: %d vs %d\\n",
+                    i / 2, fresh_pcm[i], switched_pcm[i]);
+            api->destroy(clean_fresh); api->destroy(clean_switched); return 1;
+        }
+    }
+    api->destroy(clean_fresh); api->destroy(clean_switched);
+
     // The loader must honor the source sample rate, not play every WAV at 44.1 kHz.
     long sample_rate_difference = 0;
     for (int i = 0; i < 128; ++i)
