@@ -359,6 +359,21 @@ int main(int argc, char **argv) {
         fprintf(stderr, "manual slice undo failed: %s\\n", boundary_value);
         api->destroy(slice_edit); return 1;
     }
+    // Regression: END-only edits must save the edited slice index for Undo.
+    // Previously Undo could restore the start/end of a different slice.
+    api->set_param(slice_edit, "slice", "3");
+    api->set_param(slice_edit, "slice_end", "0.65");
+    api->set_param(slice_edit, "slice", "4");
+    char before_end[32] = {};
+    api->get_param(slice_edit, "slice_end", before_end, sizeof(before_end));
+    api->set_param(slice_edit, "slice_end", "0.70");
+    api->set_param(slice_edit, "undo", "1");
+    char after_end[32] = {};
+    api->get_param(slice_edit, "slice_end", after_end, sizeof(after_end));
+    if (fabs(atof(after_end) - atof(before_end)) > 0.02) {
+        fprintf(stderr, "END-only undo restored the wrong slice: before=%s after=%s\\n", before_end, after_end);
+        api->destroy(slice_edit); return 1;
+    }
     api->destroy(slice_edit);
 
     // Starting a second voice must not reset the shared Vintage sample-hold phase.
