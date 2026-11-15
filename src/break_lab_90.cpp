@@ -147,7 +147,7 @@ static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)ret
        const int lower=e->sliceStart[sl].load()+minGap;
        const int upper=sl<15?e->sliceStart[sl+1].load()-minGap:total;
        frame=std::max(lower,std::min(upper,frame));
-       if(frame!=oldEnd){e->undoStart[sl]=oldStart;e->undoEnd[sl]=oldEnd;e->undoValid=true;e->sliceEnd[sl].store(frame);}
+       if(frame!=oldEnd){e->undoStart[sl]=oldStart;e->undoEnd[sl]=oldEnd;e->undoSlice=sl;e->undoValid=true;e->sliceEnd[sl].store(frame);}
      }
    }
    return;
@@ -229,21 +229,31 @@ static void render_engine(void *p, int16_t *out, int frames) {
       if ((step > 0.0 && v.pos >= v.end) || (step < 0.0 && v.pos < lo)) v.on = false;
     }
 
-    if (e->rateCounter == 0) {
-      e->heldL = l;
-      e->heldR = r;
-    }
-    if (++e->rateCounter >= hold) e->rateCounter = 0;
+    // Clean playback is a direct, un-decimated path. In particular, changing
+    // character modes must not leave Clean dependent on a stale sample-hold.
+    // Vintage and Paula share the legacy oscillator phase intentionally.
     if (e->mode > .5f) {
+      if (e->rateCounter == 0) {
+        e->heldL = l;
+        e->heldR = r;
+      }
+      if (++e->rateCounter >= hold) e->rateCounter = 0;
       l = bl90::paula_quantize(e->heldL, bits);
       r = bl90::paula_quantize(e->heldR, bits);
     } else {
-      l = e->heldL;
-      r = e->heldR;
+      e->rateCounter = 0; // deterministic reset on returning to Vintage
     }
 
-    e->lpL += alpha * (l - e->lpL);
-    e->lpR += alpha * (r - e->lpR);
+    // An explicitly fully-open filter must be truly transparent. The former
+    // always-on one-pole at ~18 kHz attenuated the top end even in Clean.
+    // Still track filter state so closing cutoff does not start from silence.
+    if (e->cutoff >= 0.999f) {
+      e->lpL = l;
+      e->lpR = r;
+    } else {
+      e->lpL += alpha * (l - e->lpL);
+      e->lpR += alpha * (r - e->lpR);
+    }
     l = e->lpL * e->volume;
     r = e->lpR * e->volume;
     l = std::max(-1.0f, std::min(1.0f, l));
