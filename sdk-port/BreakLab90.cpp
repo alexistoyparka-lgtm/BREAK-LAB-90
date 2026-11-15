@@ -11,7 +11,7 @@
 #include <string>
 #include <algorithm>
 #include <limits>
-#include "engine_core.cpp"
+#include "engine_core.inc"
 
 class BreakLab90 final : public mpc::Plugin {
 public:
