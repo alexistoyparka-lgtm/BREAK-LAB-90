@@ -1,0 +1,14 @@
+{
+  "name": "BREAK LAB 90",
+  "manufacturer": "OpenBench",
+  "version": "0.3.0-test1",
+  "format": "vst2",
+  "kind": "instrument",
+  "uid": "Brk9",
+  "numInputs": 0,
+  "numOutputs": 2,
+  "category": "Sampler",
+  "file32": "VST/break-lab-90-arm32.so",
+  "file64": "VST/break-lab-90-arm64.so",
+  "description": "Native inMusic SDK test port of BREAK LAB 90 with HQ Sinc and 16 break slices. Hardware validation pending."
+}
