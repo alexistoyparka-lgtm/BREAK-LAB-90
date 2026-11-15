@@ -359,6 +359,21 @@ int main(int argc, char **argv) {
         fprintf(stderr, "manual slice undo failed: %s\\n", boundary_value);
         api->destroy(slice_edit); return 1;
     }
+    // Regression: END-only edits must save the edited slice index for Undo.
+    // Previously Undo could restore the start/end of a different slice.
+    api->set_param(slice_edit, "slice", "3");
+    api->set_param(slice_edit, "slice_end", "0.65");
+    api->set_param(slice_edit, "slice", "4");
+    char before_end[32] = {};
+    api->get_param(slice_edit, "slice_end", before_end, sizeof(before_end));
+    api->set_param(slice_edit, "slice_end", "0.70");
+    api->set_param(slice_edit, "undo", "1");
+    char after_end[32] = {};
+    api->get_param(slice_edit, "slice_end", after_end, sizeof(after_end));
+    if (fabs(atof(after_end) - atof(before_end)) > 0.02) {
+        fprintf(stderr, "END-only undo restored the wrong slice: before=%s after=%s\\n", before_end, after_end);
+        api->destroy(slice_edit); return 1;
+    }
     api->destroy(slice_edit);
 
     // Starting a second voice must not reset the shared Vintage sample-hold phase.
@@ -406,6 +421,63 @@ int main(int argc, char **argv) {
     for (int i = 0; i < 256; ++i) mono_energy += (long)mono_out[i] * mono_out[i];
     api->destroy(engine);
     if (!mono_energy) { fprintf(stderr, "mono WAV playback produced silence\n"); return 1; }
+
+    // Clean 44.1-kHz reference test: sample-rate matched, full-open filter,
+    // interpolation = linear, 127 velocity, unity gain. At integer positions
+    // the output must match the source PCM after the intentional edge fade.
+    // This test specifically catches accidentally processing Clean through a
+    // stale vintage sample-and-hold or a non-transparent low-pass filter.
+    if (!make_wav(breaks + "/break01.wav", 44100, 2)) return 1;
+    void *reference_clean = api->create(dir);
+    if (!reference_clean) return 1;
+    api->set_param(reference_clean, "mode", "0");
+    api->set_param(reference_clean, "cutoff", "1");
+    api->set_param(reference_clean, "volume", "1");
+    api->set_param(reference_clean, "interpolation", "1");
+    uint8_t reference_note[3] = {0x90, 36, 127};
+    int16_t reference_out[48 * 2] = {};
+    api->midi(reference_clean, reference_note, 3);
+    api->render(reference_clean, reference_out, 48);
+    for (int i = 10; i < 35; ++i) {
+        // 1600 frames / 16 slices = 100, fadeFrames=min(88,50).
+        const int16_t src = (int16_t)(1000 + i * 8);
+        const int expected = (int)std::lround((double)src * (double)i / 50.0 * (32767.0 / 32768.0));
+        if (std::abs((int)reference_out[i * 2] - expected) > 2 ||
+            std::abs((int)reference_out[i * 2 + 1] + expected) > 2) {
+            fprintf(stderr, "Clean PCM reference mismatch at %d: got L/R %d/%d expected %d/%d\\n",
+                    i, reference_out[i * 2], reference_out[i * 2 + 1], expected, -expected);
+            api->destroy(reference_clean); return 1;
+        }
+    }
+    api->destroy(reference_clean);
+
+    // Switching back from rate-crushed Vintage must not contaminate Clean.
+    void *clean_fresh = api->create(dir);
+    void *clean_switched = api->create(dir);
+    if (!clean_fresh || !clean_switched) return 1;
+    api->set_param(clean_fresh, "volume", "1");
+    api->set_param(clean_switched, "volume", "1");
+    api->set_param(clean_switched, "mode", "1");
+    api->set_param(clean_switched, "rate", "1");
+    api->set_param(clean_switched, "bits", "4");
+    uint8_t mode_note[3] = {0x90, 36, 127};
+    int16_t vintage_preroll[128 * 2] = {};
+    api->midi(clean_switched, mode_note, 3);
+    api->render(clean_switched, vintage_preroll, 128);
+    api->set_param(clean_switched, "mode", "0");
+    int16_t fresh_pcm[48 * 2] = {}, switched_pcm[48 * 2] = {};
+    api->midi(clean_fresh, mode_note, 3);
+    api->midi(clean_switched, mode_note, 3);
+    api->render(clean_fresh, fresh_pcm, 48);
+    api->render(clean_switched, switched_pcm, 48);
+    for (int i = 0; i < 96; ++i) {
+        if (std::abs((int)fresh_pcm[i] - (int)switched_pcm[i]) > 1) {
+            fprintf(stderr, "Vintage-to-Clean leaked DSP state at frame %d: %d vs %d\\n",
+                    i / 2, fresh_pcm[i], switched_pcm[i]);
+            api->destroy(clean_fresh); api->destroy(clean_switched); return 1;
+        }
+    }
+    api->destroy(clean_fresh); api->destroy(clean_switched);
 
     // The loader must honor the source sample rate, not play every WAV at 44.1 kHz.
     long sample_rate_difference = 0;

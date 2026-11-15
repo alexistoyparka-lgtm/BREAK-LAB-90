@@ -2,7 +2,7 @@ name: Build BREAK LAB 90
 
 on:
   push:
-    branches: [main, amiga-sampler-next]
+    branches: [main, amiga-sampler-next, 'fix/clean-audio-path-v1']
     paths:
       - "vst.json"
       - "params.lock"

@@ -84,9 +84,10 @@
       "options": [
         "Paula Hold",
         "Linear",
-        "Cubic"
+        "Cubic",
+        "HQ Sinc"
       ],
-      "default": 1
+      "default": 3
     },
     {
       "key": "slice_start",
