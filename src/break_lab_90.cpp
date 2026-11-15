@@ -6,6 +6,7 @@ extern "C" {
 #include "engine.h"
 }
 #include "amiga_dsp.h"
+#include "hq_sinc.h"
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -29,7 +30,7 @@ struct Engine {
   std::atomic<int> sliceStart[16]; std::atomic<int> sliceEnd[16];
   int baseStart[16]={}; int baseEnd[16]={};
   int undoStart[16]={}; int undoEnd[16]={}; int undoSlice=0; bool undoValid=false;
-  float interpolation=1;
+  float interpolation=3;
   int rateCounter=0;
   float heldL=0, heldR=0;
   std::string status="NO WAV: add breaks/break01.wav";
@@ -96,6 +97,8 @@ static float quantize(float x,int bits){bits=std::max(4,std::min(16,bits));float
 
 static void* create_engine(const char* data_dir){
   Engine*e=new Engine();
+  // Precompute 10 x 512 x 16 sinc kernels before audio rendering begins.
+  (void)bl90::sinc16_bank();
   if(data_dir){
     std::string p(data_dir);if(!p.empty()&&p.back()!='/')p+='/';p+="breaks/break01.wav";
     if(load_wav(p.c_str(),e->sample)){
@@ -153,7 +156,7 @@ static void set_param_engine(void*p,const char*k,const char*v){if(!p||!k||!v)ret
    return;
  }
  if(!std::strcmp(k,"undo")){if(x>.5f&&e->undoValid){const int sl=e->undoSlice;e->sliceStart[sl].store(e->undoStart[sl]);e->sliceEnd[sl].store(e->undoEnd[sl]);e->undoValid=false;}return;}
- SET("interpolation",interpolation,0,2) SET("pitch",pitch,-24,24) SET("reverse",reverse,0,1) SET("mode",mode,0,2) SET("bits",bits,4,16) SET("rate",rate,0,1) SET("cutoff",cutoff,0,1) SET("volume",volume,0,1)
+ SET("interpolation",interpolation,0,3) SET("pitch",pitch,-24,24) SET("reverse",reverse,0,1) SET("mode",mode,0,2) SET("bits",bits,4,16) SET("rate",rate,0,1) SET("cutoff",cutoff,0,1) SET("volume",volume,0,1)
 #undef SET
 }
 static int get_param_engine(void*p,const char*k,char*b,int n){if(!p||!k||!b||n<2)return 0;Engine*e=(Engine*)p;float x=0;
@@ -184,6 +187,8 @@ static void render_engine(void *p, int16_t *out, int frames) {
   const int hold = e->mode > 1.5f ? 1 + (int)std::round(e->rate * 5.0f)
                  : e->mode > .5f ? 1 + (int)(e->rate * 23.0f) : 1;
   const double pitchStep = std::pow(2.0, e->pitch / 12.0) * (e->sample.sampleRate / 44100.0);
+  const bl90::Sinc16Bank& sincBank = bl90::sinc16_bank();
+  const int sincBand = sincBank.band_for_step(pitchStep);
 
   for (int i = 0; i < frames; ++i) {
     float l = 0.0f, r = 0.0f;
@@ -207,6 +212,11 @@ static void render_engine(void *p, int16_t *out, int frames) {
       float sl, sr;
       if(e->mode>1.5f || e->interpolation<0.5f){
         sl=e->sample.l[ix]; sr=e->sample.r[ix];
+      } else if(e->interpolation>2.5f){
+        // In HQ mode bandwidth follows absolute source playback rate.
+        // Each tap is clamped to the current slice to prevent sample leaks.
+        sl=sincBank.sample(e->sample.l.data(),ix,frac,lo,hi,sincBand);
+        sr=sincBank.sample(e->sample.r.data(),ix,frac,lo,hi,sincBand);
       } else if(e->interpolation>1.5f){
         sl=bl90::cubic4(e->sample.l[ixm],e->sample.l[ix],e->sample.l[ix1],e->sample.l[ix2],frac);
         sr=bl90::cubic4(e->sample.r[ixm],e->sample.r[ix],e->sample.r[ix1],e->sample.r[ix2],frac);
